@@ -2,9 +2,10 @@
 #![no_main]
 
 use embassy_executor::Spawner;
-use embassy_time::{Duration, Timer};
 use esp_hal::clock::CpuClock;
+use esp_hal::rng::Rng;
 use esp_hal::timer::timg::TimerGroup;
+use esp_println::println;
 
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! {
@@ -12,6 +13,9 @@ fn panic(_: &core::panic::PanicInfo) -> ! {
 }
 
 extern crate alloc;
+
+use async_esp_server as lib;
+use esp_wifi::EspWifiController;
 
 #[esp_hal_embassy::main]
 async fn main(spawner: Spawner) {
@@ -25,20 +29,35 @@ async fn main(spawner: Spawner) {
     let timer0 = TimerGroup::new(peripherals.TIMG1);
     esp_hal_embassy::init(timer0.timer0);
 
+    println!("Embassy initialized");
+
     let timer1 = TimerGroup::new(peripherals.TIMG0);
-    let _init = esp_wifi::init(
-        timer1.timer0,
-        esp_hal::rng::Rng::new(peripherals.RNG),
-        peripherals.RADIO_CLK,
-    )
-    .unwrap();
 
-    // TODO: Spawn some tasks
-    let _ = spawner;
+    //let _init = esp_wifi::init(
+    //    timer1.timer0,
+    //    esp_hal::rng::Rng::new(peripherals.RNG),
+    //    peripherals.RADIO_CLK,
+    //)
+    //.unwrap();
 
-    loop {
-        Timer::after(Duration::from_secs(1)).await;
+    let rng = Rng::new(peripherals.RNG);
+    let esp_wifi_ctrl = &*lib::mk_static!(
+        EspWifiController<'static>,
+        esp_wifi::init(timer1.timer0, rng.clone(), peripherals.RADIO_CLK).unwrap()
+    );
+
+    let stack = lib::wifi::start_wifi(esp_wifi_ctrl, peripherals.WIFI, rng, &spawner).await;
+
+    let web_app = lib::web::WebApp::default();
+
+    for id in 0..lib::web::WEB_TASK_POOL_SIZE {
+        spawner.must_spawn(lib::web::web_task(
+            id,
+            stack,
+            web_app.router,
+            web_app.config,
+        ));
     }
 
-    // for inspiration have a look at the examples at https://github.com/esp-rs/esp-hal/tree/esp-hal-v1.0.0-beta.0/examples/src/bin
+    println!("Web server started");
 }
