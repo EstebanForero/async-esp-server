@@ -13,6 +13,7 @@ impl AppBuilder for Application {
             "/",
             routing::get_service(File::html(include_str!("index.html"))),
         )
+        //.route("/add", routing::post(async ||))
     }
 }
 
