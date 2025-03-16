@@ -1,6 +1,7 @@
 #![no_std]
 #![feature(impl_trait_in_assoc_type)]
 
+pub mod app;
 pub mod web;
 pub mod wifi;
 

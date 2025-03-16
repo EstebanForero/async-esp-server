@@ -1,7 +1,14 @@
 use embassy_net::Stack;
 use embassy_time::Duration;
 use esp_alloc as _;
-use picoserve::{response::File, routing, AppBuilder, AppRouter, Router};
+use heapless::String;
+use picoserve::{
+    response::{self, File},
+    routing::{self, get, post},
+    AppBuilder, AppRouter, Router,
+};
+
+use crate::app::STATE;
 
 pub struct Application;
 
@@ -9,11 +16,31 @@ impl AppBuilder for Application {
     type PathRouter = impl routing::PathRouter;
 
     fn build_app(self) -> picoserve::Router<Self::PathRouter> {
-        picoserve::Router::new().route(
-            "/",
-            routing::get_service(File::html(include_str!("index.html"))),
-        )
-        //.route("/add", routing::post(async ||))
+        picoserve::Router::new()
+            .route(
+                "/",
+                routing::get_service(File::html(include_str!("index.html"))),
+            )
+            .route(
+                "/add",
+                post(|| async {
+                    let mut state = STATE.lock().await;
+
+                    state.counter += 1;
+                }),
+            )
+            .route(
+                "/counter",
+                get(|| async {
+                    let state = STATE.lock().await;
+
+                    let mut response_str: String<10> = String::new();
+
+                    ufmt::uwrite!(&mut response_str, "Counter: {}", state.counter).unwrap();
+
+                    response_str
+                }),
+            )
     }
 }
 
