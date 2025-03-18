@@ -4,7 +4,7 @@ use esp_hal::gpio::Flex;
 use esp_println::println;
 use onecable::{ds18b20::DS18B20, OneWire};
 
-struct TemperatureSensor<'a> {
+pub struct TemperatureSensor<'a> {
     temp_sensor: DS18B20,
     wire: OneWire<'a, Flex<'a>>,
 }
