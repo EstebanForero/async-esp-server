@@ -27,6 +27,8 @@ impl<'a> TemperatureSensor<'a> {
     /// ```rust
     /// use esp_hal::gpio::Flex;
     ///
+    /// let pin = peripherals.GPIO15; // Example pin
+    ///
     /// // Assuming `pin` is a GPIO pin (e.g., GpioPin from esp_hal)
     /// let mut wire_pin = Flex::new(pin);
     /// wire_pin.set_as_open_drain(esp_hal::gpio::Pull::Up);
