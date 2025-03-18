@@ -3,7 +3,8 @@ use embassy_time::Duration;
 use esp_alloc as _;
 use heapless::String;
 use picoserve::{
-    response::{self, File},
+    extract::Json,
+    response::{Directory, File},
     routing::{self, get, post},
     AppBuilder, AppRouter, Router,
 };
@@ -19,7 +20,15 @@ impl AppBuilder for Application {
         picoserve::Router::new()
             .route(
                 "/",
-                routing::get_service(File::html(include_str!("index.html"))),
+                routing::get_service(File::html(include_str!("dist/index.html"))),
+            )
+            .route(
+                "/assets/index.css",
+                routing::get_service(File::css(include_str!("dist/assets/index.css"))),
+            )
+            .route(
+                "/assets/index.js",
+                routing::get_service(File::javascript(include_str!("dist/assets/index.js"))),
             )
             .route(
                 "/add",
