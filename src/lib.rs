@@ -3,6 +3,7 @@
 
 pub mod app;
 pub mod lcd_display;
+pub mod peripherial_tasks;
 pub mod temp_sensor;
 pub mod utils;
 pub mod web;

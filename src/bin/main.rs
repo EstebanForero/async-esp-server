@@ -16,6 +16,7 @@ extern crate alloc;
 
 use async_esp_server as lib;
 use esp_wifi::EspWifiController;
+use lib::peripherial_tasks::*;
 
 #[esp_hal_embassy::main]
 async fn main(spawner: Spawner) {
