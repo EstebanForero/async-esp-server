@@ -1,7 +1,7 @@
 use embassy_time::Delay;
 use esp_hal::{
     gpio::AnyPin,
-    i2c::master::{AnyI2c, Config, I2c, I2cAddress},
+    i2c::master::{AnyI2c, Config, I2c},
     Async,
 };
 use hd44780_driver::{
@@ -12,7 +12,8 @@ use hd44780_driver::{
     HD44780,
 };
 use heapless::String;
-use ufmt::uDisplay;
+
+use crate::utils::FloatRepresentation;
 
 pub struct Display<'a> {
     display:
@@ -34,8 +35,8 @@ impl<'a> Display<'_> {
             panic!("Failed to initialize display");
         };
 
-        lcd.reset(&mut Delay);
-        lcd.clear(&mut Delay);
+        lcd.reset(&mut Delay).unwrap();
+        lcd.clear(&mut Delay).unwrap();
 
         Self { display: lcd }
     }
@@ -43,8 +44,7 @@ impl<'a> Display<'_> {
     pub fn display_temperature(&mut self, temp: f64) {
         let mut temperature_string: String<16> = String::new();
 
-        let int_part = temp as u16;
-        let dec_part = ((temp - (int_part as f64)) * 10.) as u16;
+        let (int_part, dec_part) = temp.float_to_parts(1);
 
         ufmt::uwrite!(
             &mut temperature_string,
@@ -54,7 +54,18 @@ impl<'a> Display<'_> {
         )
         .unwrap();
 
-        self.display.set_cursor_xy((0, 0), &mut Delay);
-        self.display.write_str(string, &mut Delay);
+        self.display.set_cursor_xy((0, 0), &mut Delay).unwrap();
+        self.display
+            .write_str(&temperature_string, &mut Delay)
+            .unwrap();
+    }
+
+    pub fn display_gas(&mut self, gas: u32) {
+        let mut gas_string: String<16> = String::new();
+
+        ufmt::uwrite!(&mut gas_string, "Gas: {}", gas).unwrap();
+
+        self.display.set_cursor_xy((0, 1), &mut Delay).unwrap();
+        self.display.write_str(&gas_string, &mut Delay).unwrap();
     }
 }

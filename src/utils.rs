@@ -1,4 +1,4 @@
-trait FloatRepresentation {
+pub trait FloatRepresentation {
     fn float_to_parts(self, decimals: u8) -> (u16, u16);
 }
 
