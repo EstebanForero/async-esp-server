@@ -50,6 +50,9 @@ embassy-sync = "0.6.2"
 ufmt = "0.2.0"
 onecable = "0.2.0"
 anyhow = { version = "1.0.97", default-features = false }
+hd44780-driver = { git = "https://github.com/JohnDoneth/hd44780-driver", rev = "9009f2c24771ba0a20f8f7534471c9869188f76c", features = [
+    "embedded-hal-async",
+] }
 
 [profile.dev]
 # Rust debug is too slow.

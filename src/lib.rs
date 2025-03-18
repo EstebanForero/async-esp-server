@@ -4,6 +4,7 @@
 pub mod app;
 pub mod lcd_display;
 pub mod temp_sensor;
+pub mod utils;
 pub mod web;
 pub mod wifi;
 

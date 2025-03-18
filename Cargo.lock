@@ -25,6 +25,7 @@ dependencies = [
  "esp-hal-embassy",
  "esp-println",
  "esp-wifi",
+ "hd44780-driver",
  "heapless",
  "onecable",
  "picoserve",
@@ -723,6 +724,15 @@ name = "hashbrown"
 version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bf151400ff0baff5465007dd2f3e717f3fe502074ca563069ce3a6629d07b289"
+
+[[package]]
+name = "hd44780-driver"
+version = "0.4.0"
+source = "git+https://github.com/JohnDoneth/hd44780-driver?rev=9009f2c24771ba0a20f8f7534471c9869188f76c#9009f2c24771ba0a20f8f7534471c9869188f76c"
+dependencies = [
+ "embedded-hal 1.0.0",
+ "embedded-hal-async",
+]
 
 [[package]]
 name = "heapless"
