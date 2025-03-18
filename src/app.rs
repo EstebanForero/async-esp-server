@@ -25,12 +25,12 @@ pub struct History<T: Default + Copy, const N: usize> {
 
 impl<T: Default + Copy, const N: usize> History<T, N> {
     pub fn push_value(&mut self, val: T) {
+        self.inner_values[self.pointer] = val;
+        self.pointer += 1;
+
         if self.pointer >= N {
             self.pointer = 0;
         }
-
-        self.inner_values[self.pointer] = val;
-        self.pointer += 1;
     }
 
     const fn default_value(val: T) -> Self {
@@ -38,6 +38,10 @@ impl<T: Default + Copy, const N: usize> History<T, N> {
             inner_values: [val; N],
             pointer: 0,
         }
+    }
+
+    pub fn get_current_value(&self) -> &T {
+        &self.inner_values[self.pointer]
     }
 
     pub fn get_values_ordered(&self) -> [&T; N] {

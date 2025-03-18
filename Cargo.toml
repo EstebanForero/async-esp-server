@@ -48,6 +48,8 @@ picoserve = { version = "0.15.0", features = ["embassy"] }
 esp-println = { version = "0.13.1", features = ["esp32"] }
 embassy-sync = "0.6.2"
 ufmt = "0.2.0"
+onecable = "0.2.0"
+anyhow = { version = "1.0.97", default-features = false }
 
 [profile.dev]
 # Rust debug is too slow.

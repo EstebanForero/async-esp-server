@@ -2,7 +2,6 @@
 #![no_main]
 
 use embassy_executor::Spawner;
-use embassy_time::{Duration, Timer};
 use esp_hal::clock::CpuClock;
 use esp_hal::rng::Rng;
 use esp_hal::timer::timg::TimerGroup;
@@ -20,8 +19,6 @@ use esp_wifi::EspWifiController;
 
 #[esp_hal_embassy::main]
 async fn main(spawner: Spawner) {
-    // generator version: 0.3.1
-
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
@@ -34,17 +31,10 @@ async fn main(spawner: Spawner) {
 
     let timer1 = TimerGroup::new(peripherals.TIMG0);
 
-    //let _init = esp_wifi::init(
-    //    timer1.timer0,
-    //    esp_hal::rng::Rng::new(peripherals.RNG),
-    //    peripherals.RADIO_CLK,
-    //)
-    //.unwrap();
-
     let rng = Rng::new(peripherals.RNG);
     let esp_wifi_ctrl = &*lib::mk_static!(
         EspWifiController<'static>,
-        esp_wifi::init(timer1.timer0, rng.clone(), peripherals.RADIO_CLK).unwrap()
+        esp_wifi::init(timer1.timer0, rng, peripherals.RADIO_CLK).unwrap()
     );
 
     let stack = lib::wifi::start_wifi(esp_wifi_ctrl, peripherals.WIFI, rng, &spawner).await;
