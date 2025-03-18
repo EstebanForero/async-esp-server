@@ -2,7 +2,7 @@
 #![feature(impl_trait_in_assoc_type)]
 
 pub mod app;
-pub mod sensors;
+pub mod temp_sensor;
 pub mod web;
 pub mod wifi;
 
