@@ -70,7 +70,7 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
         );
 
         if save_counter > app_state.config.data_point_interval {
-            app_state.value_history.update_values(values);
+            app_state.value_history.push_values(values);
             save_counter = 0;
         }
 

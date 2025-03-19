@@ -25,7 +25,7 @@ pub struct ValueHistory<const N: usize> {
 }
 
 impl<const N: usize> ValueHistory<N> {
-    pub fn update_values(&mut self, sensor_values: SensorValues) {
+    pub fn push_values(&mut self, sensor_values: SensorValues) {
         self.flame.push_value(sensor_values.flame);
         self.ppm.push_value(sensor_values.gas);
         self.temp.push_value(sensor_values.temp);
