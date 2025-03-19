@@ -17,8 +17,7 @@ struct SensorValues {
 static SENSOR_VALS_SIGNAL: Signal<CriticalSectionRawMutex, SensorValues> = Signal::new();
 
 #[embassy_executor::task]
-pub async fn sensor_reader_task(temperature_pin : GpioPin<15>){
-
+pub async fn sensor_reader_task(temperature_pin: GpioPin<15>) {
     let mut wire_pin = Flex::new(temperature_pin);
     wire_pin.set_as_open_drain(esp_hal::gpio::Pull::Up);
     wire_pin.set_as_output();
@@ -26,11 +25,14 @@ pub async fn sensor_reader_task(temperature_pin : GpioPin<15>){
     let mut temperature_sensor = TemperatureSensor::new(&mut wire_pin).await;
 
     loop {
-        let temp = temperature_sensor.read_temperature().unwrap();
+        let Ok(temp) = temperature_sensor.read_temperature() else {
+            continue;
+        };
+
         SENSOR_VALS_SIGNAL.signal(SensorValues {
             temp: temp,
-            gas:0,
-            flame:false,
+            gas: 0,
+            flame: false,
         });
         Timer::after(Duration::from_millis(500)).await;
     }
@@ -43,11 +45,12 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
     let mut display = lcd_display::Display::new(i2c, scl.into(), sda.into(), i2c_address);
 
     loop {
-        let values= SENSOR_VALS_SIGNAL.wait().await;
-        println!("{}",values.temp);
+        let values = SENSOR_VALS_SIGNAL.wait().await;
+        println!("{}", values.temp);
         display.display_temperature(values.temp);
     }
 }
 
 #[embassy_executor::task]
 pub async fn alarms_task() {}
+
