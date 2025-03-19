@@ -56,18 +56,8 @@ async fn main(spawner: Spawner) {
 
     println!("Web server started");
 
-
-  
-    let temperature_pin = peripherals.GPIO15; // Example pin
-    // Assuming `pin` is a GPIO pin (e.g., GpioPin from esp_hal)
-    let mut wire_pin = Flex::new(temperature_pin);
-    wire_pin.set_as_open_drain(esp_hal::gpio::Pull::Up);
-    wire_pin.set_as_output();
-
-    let temperature_sensor = TemperatureSensor::new(&mut wire_pin).await;
-
-
-    spawner.must_spawn(sensor_reader_task(temperature_sensor));
+    spawner.must_spawn(sensor_reader_task(peripherals.GPIO15));
+    spawner.must_spawn(display_task());
 
 
 }
