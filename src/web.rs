@@ -23,11 +23,11 @@ impl AppBuilder for Application {
                 routing::get_service(File::html(include_str!("iot_dashboard/dist/index.html"))),
             )
             .route(
-                "/assets/index.css",
+                "/index.css",
                 routing::get_service(File::css(include_str!("iot_dashboard/dist/index.css"))),
             )
             .route(
-                "iot_dashboard/dist/index.js",
+                "/index.js",
                 routing::get_service(File::javascript(include_str!(
                     "iot_dashboard/dist/index.js"
                 ))),
