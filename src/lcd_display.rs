@@ -87,6 +87,9 @@ impl<'a> Display<'_> {
         )
         .unwrap();
 
+        self.display.reset(&mut Delay).unwrap();
+        self.display.clear(&mut Delay).unwrap();
+
         self.display.set_cursor_xy((0, 0), &mut Delay).unwrap();
         self.display
             .write_str(&temperature_string, &mut Delay)
