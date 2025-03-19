@@ -64,10 +64,10 @@ async fn main(spawner: Spawner) {
     wire_pin.set_as_open_drain(esp_hal::gpio::Pull::Up);
     wire_pin.set_as_output();
 
-    let sensor = TemperatureSensor::new(&mut wire_pin).await;
+    let temperature_sensor = TemperatureSensor::new(&mut wire_pin).await;
 
 
-
+    spawner.must_spawn(sensor_reader_task(temperature_sensor));
 
 
 }
