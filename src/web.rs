@@ -1,14 +1,16 @@
 use embassy_net::Stack;
 use embassy_time::Duration;
 use esp_alloc as _;
-use heapless::String;
+use esp_println::println;
 use picoserve::{
-    response::File,
+    extract,
+    response::{json, File},
     routing::{self, get, post},
     AppBuilder, AppRouter, Router,
 };
+use serde::Serialize;
 
-use crate::app::STATE;
+use crate::app::{self, SensorValues, ValueHistoryArray, APP_STATE};
 
 pub struct Application;
 
@@ -32,23 +34,51 @@ impl AppBuilder for Application {
                 ))),
             )
             .route(
-                "/add",
-                post(|| async {
-                    let mut state = STATE.lock().await;
+                "/config",
+                post(|extract::Json::<app::Config>(config)| async move {
+                    println!("{:#?}", config);
+                })
+                .get(|| async {
+                    let state = APP_STATE.lock().await;
 
-                    state.counter += 1;
+                    let config = state.config.clone();
+
+                    let json_value: json::Json<app::Config> = picoserve::extract::Json(config);
+
+                    json_value
                 }),
             )
             .route(
-                "/counter",
+                "/values",
                 get(|| async {
-                    let state = STATE.lock().await;
+                    let mut state = APP_STATE.lock().await;
 
-                    let mut response_str: String<10> = String::new();
+                    let vals = state.value_history.current_values();
 
-                    ufmt::uwrite!(&mut response_str, "Counter: {}", state.counter).unwrap();
+                    #[derive(Serialize)]
+                    struct SensorValuesInfo {
+                        sensor_values: SensorValues,
+                        has_changed: bool,
+                    }
 
-                    response_str
+                    let json_value: json::Json<SensorValuesInfo> =
+                        picoserve::extract::Json(SensorValuesInfo {
+                            sensor_values: vals,
+                            has_changed: state.value_history.new_change(),
+                        });
+
+                    json_value
+                }),
+            )
+            .route(
+                "/values/history",
+                get(|| async {
+                    let state = APP_STATE.lock().await;
+
+                    let vals = state.value_history.get_current_values_history();
+                    let json_value: json::Json<ValueHistoryArray> = picoserve::extract::Json(vals);
+
+                    json_value
                 }),
             )
     }

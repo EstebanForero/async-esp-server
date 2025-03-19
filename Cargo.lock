@@ -29,6 +29,7 @@ dependencies = [
  "heapless",
  "onecable",
  "picoserve",
+ "serde",
  "smoltcp",
  "static_cell",
  "ufmt",

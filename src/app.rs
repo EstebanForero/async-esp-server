@@ -1,11 +1,14 @@
+use core::{array, usize};
+
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::mutex::Mutex;
+use serde::{Deserialize, Serialize};
 
 pub struct AppState {
     pub counter: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct SensorValues {
     pub temp: f64,
     pub gas: u16,
@@ -18,20 +21,61 @@ pub enum Risk {
     High,
 }
 
+pub const HISTORY_LENGTH: usize = 10;
+
 pub struct ValueHistory<const N: usize> {
     temp: History<f64, N>,
     ppm: History<u16, N>,
     flame: History<bool, N>,
+    new_change: bool,
 }
+
+#[derive(Serialize)]
+pub struct ValueHistoryArray([SensorValues; 10]);
 
 impl<const N: usize> ValueHistory<N> {
     pub fn push_values(&mut self, sensor_values: SensorValues) {
+        self.new_change = true;
         self.flame.push_value(sensor_values.flame);
         self.ppm.push_value(sensor_values.gas);
         self.temp.push_value(sensor_values.temp);
     }
+
+    pub fn current_values(&self) -> SensorValues {
+        SensorValues {
+            flame: *self.flame.get_current_value(),
+            gas: *self.ppm.get_current_value(),
+            temp: *self.temp.get_current_value(),
+        }
+    }
+
+    pub fn new_change(&mut self) -> bool {
+        if self.new_change {
+            self.new_change = false;
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
 
+impl ValueHistory<10> {
+    /// Very expesive function to run
+    pub fn get_current_values_history(&self) -> ValueHistoryArray {
+        let temp_values = self.temp.get_values_ordered();
+        let ppm_values = self.ppm.get_values_ordered();
+        let flame_values = self.flame.get_values_ordered();
+        let arr = array::from_fn(|i| SensorValues {
+            temp: *temp_values[i],
+            gas: *ppm_values[i],
+            flame: *flame_values[i],
+        });
+
+        ValueHistoryArray(arr)
+    }
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Config {
     pub temp_threshold: f64,
     pub gas_threshold: u16,
@@ -90,7 +134,7 @@ impl<T: Default + Copy, const N: usize> History<T, N> {
 
 pub struct App {
     pub config: Config,
-    pub value_history: ValueHistory<10>,
+    pub value_history: ValueHistory<HISTORY_LENGTH>,
 }
 
 pub static APP_STATE: Mutex<CriticalSectionRawMutex, App> = Mutex::new(App {
@@ -104,6 +148,7 @@ pub static APP_STATE: Mutex<CriticalSectionRawMutex, App> = Mutex::new(App {
         temp: History::default_value(0.0),
         ppm: History::default_value(0),
         flame: History::default_value(true),
+        new_change: true,
     },
 });
 
