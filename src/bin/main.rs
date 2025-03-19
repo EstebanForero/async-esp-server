@@ -1,10 +1,8 @@
 #![no_std]
 #![no_main]
 
-use async_esp_server::temp_sensor::TemperatureSensor;
 use embassy_executor::Spawner;
 use esp_hal::clock::CpuClock;
-use esp_hal::gpio::Flex;
 use esp_hal::rng::Rng;
 use esp_hal::timer::timg::TimerGroup;
 use esp_println::println;
