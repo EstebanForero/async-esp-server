@@ -1,11 +1,11 @@
 use embassy_sync::blocking_mutex::raw::{CriticalSectionRawMutex, NoopRawMutex};
 use embassy_sync::signal::Signal;
 use embassy_time::{Duration, Timer};
-use esp_hal::peripherals::GPIO;
-use esp_hal::{delay, peripheral};
-use esp_hal::gpio::{AnyPin, Flex, GpioPin};
+use esp_hal::gpio::{Flex, GpioPin};
+use esp_hal::i2c::master::AnyI2c;
 use esp_println::println;
 
+use crate::lcd_display;
 use crate::temp_sensor::{self, TemperatureSensor};
 
 struct SensorValues {
@@ -37,7 +37,11 @@ pub async fn sensor_reader_task(temperature_pin : GpioPin<15>){
 }
 
 #[embassy_executor::task]
-pub async fn display_task() {
+pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
+    let i2c_address = 0x27;
+
+    let display = lcd_display::Display::new(i2c, scl.into(), sda.into(), i2c_address);
+
     loop {
         let values= SENSOR_VALS_SIGNAL.wait().await;
         println!("{}",values.temp);

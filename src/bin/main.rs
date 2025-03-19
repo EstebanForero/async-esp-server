@@ -1,14 +1,11 @@
 #![no_std]
 #![no_main]
 
-use async_esp_server::temp_sensor::TemperatureSensor;
 use embassy_executor::Spawner;
 use esp_hal::clock::CpuClock;
 use esp_hal::rng::Rng;
 use esp_hal::timer::timg::TimerGroup;
 use esp_println::println;
-use esp_hal::gpio::Flex;
-
 
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! {
@@ -57,7 +54,9 @@ async fn main(spawner: Spawner) {
     println!("Web server started");
 
     spawner.must_spawn(sensor_reader_task(peripherals.GPIO15));
-    spawner.must_spawn(display_task());
-
-
+    spawner.must_spawn(display_task(
+        peripherals.I2C0.into(),
+        peripherals.GPIO18,
+        peripherals.GPIO23,
+    ));
 }
