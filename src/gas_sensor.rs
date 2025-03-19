@@ -1,6 +1,6 @@
 use esp_hal::{
     analog::adc::{Adc, AdcConfig, AdcPin},
-    gpio::{AnyPin, GpioPin},
+    gpio::GpioPin,
     peripherals::ADC1,
     Blocking,
 };

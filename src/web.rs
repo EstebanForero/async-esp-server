@@ -3,8 +3,7 @@ use embassy_time::Duration;
 use esp_alloc as _;
 use heapless::String;
 use picoserve::{
-    extract::Json,
-    response::{Directory, File},
+    response::File,
     routing::{self, get, post},
     AppBuilder, AppRouter, Router,
 };

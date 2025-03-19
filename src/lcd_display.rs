@@ -90,7 +90,7 @@ impl<'a> Display<'_> {
             .unwrap();
     }
 
-    pub fn display_gas(&mut self, gas: u32) {
+    pub fn display_gas(&mut self, gas: u16) {
         let mut gas_string: String<16> = String::new();
 
         ufmt::uwrite!(&mut gas_string, "Gas: {}", gas).unwrap();

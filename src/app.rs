@@ -5,15 +5,36 @@ pub struct AppState {
     pub counter: u32,
 }
 
+#[derive(Debug)]
+pub struct SensorValues {
+    pub temp: f64,
+    pub gas: u16,
+    pub flame: bool,
+}
+
+pub enum Risk {
+    Low,
+    Moderate,
+    High,
+}
+
 pub struct ValueHistory<const N: usize> {
-    pub temp: History<f64, N>,
-    pub ppm: History<u16, N>,
-    pub flama: History<bool, N>,
+    temp: History<f64, N>,
+    ppm: History<u16, N>,
+    flame: History<bool, N>,
+}
+
+impl<const N: usize> ValueHistory<N> {
+    pub fn update_values(&mut self, sensor_values: SensorValues) {
+        self.flame.push_value(sensor_values.flame);
+        self.ppm.push_value(sensor_values.gas);
+        self.temp.push_value(sensor_values.temp);
+    }
 }
 
 pub struct Config {
     pub temp_threshold: f64,
-    pub gas_threshold: u32,
+    pub gas_threshold: u16,
     pub alarms_enabled: bool,
     pub data_point_interval: u8,
 }
@@ -72,7 +93,7 @@ pub struct App {
     pub value_history: ValueHistory<10>,
 }
 
-pub static VALUES: Mutex<CriticalSectionRawMutex, App> = Mutex::new(App {
+pub static APP_STATE: Mutex<CriticalSectionRawMutex, App> = Mutex::new(App {
     config: Config {
         temp_threshold: 17.,
         gas_threshold: 300,
@@ -82,7 +103,7 @@ pub static VALUES: Mutex<CriticalSectionRawMutex, App> = Mutex::new(App {
     value_history: ValueHistory {
         temp: History::default_value(0.0),
         ppm: History::default_value(0),
-        flama: History::default_value(true),
+        flame: History::default_value(true),
     },
 });
 

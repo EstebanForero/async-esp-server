@@ -1,3 +1,5 @@
+use super::app::{Risk, SensorValues};
+use crate::app::APP_STATE;
 use crate::gas_sensor::GasSensor;
 use crate::lcd_display;
 use crate::temp_sensor::TemperatureSensor;
@@ -9,13 +11,8 @@ use esp_hal::i2c::master::AnyI2c;
 use esp_hal::peripherals::ADC1;
 use esp_println::println;
 
-struct SensorValues {
-    temp: f64,
-    gas: u32,
-    flame: bool,
-}
-
 static SENSOR_VALS_SIGNAL: Signal<CriticalSectionRawMutex, SensorValues> = Signal::new();
+static RISK_SIGNAL: Signal<CriticalSectionRawMutex, Risk> = Signal::new();
 
 #[embassy_executor::task]
 pub async fn sensor_reader_task(
@@ -43,7 +40,7 @@ pub async fn sensor_reader_task(
 
         SENSOR_VALS_SIGNAL.signal(SensorValues {
             temp,
-            gas: gas_value as u32,
+            gas: gas_value,
             flame: flame_value,
         });
         Timer::after(Duration::from_millis(500)).await;
@@ -56,15 +53,54 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
 
     let mut display = lcd_display::Display::new(i2c, scl.into(), sda.into(), i2c_address);
 
+    let mut save_counter = 0;
+
     loop {
         let values = SENSOR_VALS_SIGNAL.wait().await;
-        println!("Temp: {}", values.temp);
-        println!("Gas: {}", values.gas);
-        println!("Flame {}", values.flame);
+        let mut app_state = APP_STATE.lock().await;
+
+        println!("{:#?}", values);
         display.display_temperature(values.temp);
         display.display_gas(values.gas);
+
+        let risk = get_risk(
+            &values,
+            app_state.config.gas_threshold,
+            app_state.config.temp_threshold,
+        );
+
+        if save_counter > app_state.config.data_point_interval {
+            app_state.value_history.update_values(values);
+            save_counter = 0;
+        }
+
+        save_counter += 1;
+
+        if app_state.config.alarms_enabled {
+            RISK_SIGNAL.signal(risk);
+        }
     }
 }
 
+fn get_risk(sensor_values: &SensorValues, gas_threshold: u16, temp_threshold: f64) -> Risk {
+    if sensor_values.flame {
+        return Risk::High;
+    }
+
+    if sensor_values.gas > gas_threshold && sensor_values.temp > temp_threshold {
+        return Risk::High;
+    }
+
+    if sensor_values.gas > gas_threshold || sensor_values.temp > temp_threshold {
+        return Risk::Moderate;
+    }
+
+    Risk::Low
+}
+
 #[embassy_executor::task]
-pub async fn alarms_task() {}
+pub async fn alarms_task() {
+    loop {
+        let risk = RISK_SIGNAL.wait().await;
+    }
+}
