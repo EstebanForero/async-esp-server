@@ -33,7 +33,7 @@ impl<'a> GasSensor<'_> {
                 continue;
             }
 
-            value = val_err.unwrap();
+            value = 4095 - val_err.unwrap();
             break;
         }
 
