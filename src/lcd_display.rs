@@ -84,9 +84,6 @@ impl<'a> Display<'_> {
 
         ufmt::uwrite!(&mut temperature_string, "Temp: {}.{}", int_part, dec_part).unwrap();
 
-        self.display.reset(&mut Delay).unwrap();
-        self.display.clear(&mut Delay).unwrap();
-
         self.display.set_cursor_xy((0, 0), &mut Delay).unwrap();
         self.display
             .write_str(&temperature_string, &mut Delay)
