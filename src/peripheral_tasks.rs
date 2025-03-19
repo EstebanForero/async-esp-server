@@ -1,11 +1,13 @@
 use embassy_sync::blocking_mutex::raw::{CriticalSectionRawMutex, NoopRawMutex};
 use embassy_sync::signal::Signal;
 use embassy_time::{Duration, Timer};
-use esp_hal::gpio::{Flex, GpioPin};
+use esp_hal::gpio::{Flex, GpioPin, Level, Output, OutputConfig};
 use esp_hal::i2c::master::AnyI2c;
+use esp_hal::peripherals::ADC1;
 use esp_println::println;
 use esp_hal::analog::adc::{Adc, AdcConfig, AdcPin, Attenuation};
-use crate::lcd_display;
+use crate::gas_sensor::GasSensor;
+use crate::{gas_sensor, lcd_display};
 use crate::temp_sensor::{self, TemperatureSensor};
 
 struct SensorValues {
@@ -17,27 +19,34 @@ struct SensorValues {
 static SENSOR_VALS_SIGNAL: Signal<CriticalSectionRawMutex, SensorValues> = Signal::new();
 
 #[embassy_executor::task]
-pub async fn sensor_reader_task(temperature_pin: GpioPin<15>, gas_pin : GpioPin<34>) {
+pub async fn sensor_reader_task(temperature_pin: GpioPin<15>, adc: ADC1, pin: GpioPin<34>,flame_pin: GpioPin<2>) {
     let mut wire_pin = Flex::new(temperature_pin);
     wire_pin.set_as_open_drain(esp_hal::gpio::Pull::Up);
     wire_pin.set_as_output();
 
-    let mut adc1_config = AdcConfig::new();
-    let mut analog_pin = adc1_config.enable_pin(gas_pin, Attenuation::_11dB);
-    let mut adc1 = Adc::new(peripherals.ADC1, adc1_config);
-
-
+    let mut gas_sensor = GasSensor::new(adc, pin);
     let mut temperature_sensor = TemperatureSensor::new(&mut wire_pin).await;
+    let mut flame_sensor = Output::new(flame_pin, Level::High, OutputConfig::default());
 
     loop {
         let Ok(temp) = temperature_sensor.read_temperature() else {
             continue;
         };
 
+        let gas_value = gas_sensor.get_value();
+
+        let mut flame_value = false;
+
+        if flame_sensor.is_set_low(){
+            flame_value = true;
+
+        } else {
+            flame_value = false;
+        }
         SENSOR_VALS_SIGNAL.signal(SensorValues {
             temp: temp,
-            gas: 0,
-            flame: false,
+            gas: gas_value as u32 ,
+            flame: flame_value,
         });
         Timer::after(Duration::from_millis(500)).await;
     }
@@ -51,8 +60,11 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
 
     loop {
         let values = SENSOR_VALS_SIGNAL.wait().await;
-        println!("{}", values.temp);
+        println!("Temp: {}", values.temp);
+        println!("Gas: {}", values.gas);
+        println!("Flame {}",values.flame);
         display.display_temperature(values.temp);
+        display.display_gas(values.gas);
     }
 }
 
