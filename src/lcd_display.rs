@@ -71,6 +71,9 @@ impl<'a> Display<'_> {
         lcd.reset(&mut Delay).unwrap();
         lcd.clear(&mut Delay).unwrap();
 
+        lcd.set_cursor_xy((0, 0), &mut Delay).unwrap();
+        lcd.write_str("Temperature", &mut Delay).unwrap();
+
         Self { display: lcd }
     }
 
