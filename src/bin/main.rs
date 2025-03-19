@@ -1,11 +1,14 @@
 #![no_std]
 #![no_main]
 
+use async_esp_server::temp_sensor::TemperatureSensor;
 use embassy_executor::Spawner;
 use esp_hal::clock::CpuClock;
 use esp_hal::rng::Rng;
 use esp_hal::timer::timg::TimerGroup;
 use esp_println::println;
+use esp_hal::gpio::Flex;
+
 
 #[panic_handler]
 fn panic(_: &core::panic::PanicInfo) -> ! {
@@ -52,4 +55,19 @@ async fn main(spawner: Spawner) {
     }
 
     println!("Web server started");
+
+
+  
+    let temperature_pin = peripherals.GPIO15; // Example pin
+    // Assuming `pin` is a GPIO pin (e.g., GpioPin from esp_hal)
+    let mut wire_pin = Flex::new(temperature_pin);
+    wire_pin.set_as_open_drain(esp_hal::gpio::Pull::Up);
+    wire_pin.set_as_output();
+
+    let sensor = TemperatureSensor::new(&mut wire_pin).await;
+
+
+
+
+
 }
