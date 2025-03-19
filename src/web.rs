@@ -20,15 +20,17 @@ impl AppBuilder for Application {
         picoserve::Router::new()
             .route(
                 "/",
-                routing::get_service(File::html(include_str!("dist/index.html"))),
+                routing::get_service(File::html(include_str!("iot_dashboard/dist/index.html"))),
             )
             .route(
                 "/assets/index.css",
-                routing::get_service(File::css(include_str!("dist/assets/index.css"))),
+                routing::get_service(File::css(include_str!("iot_dashboard/dist/index.css"))),
             )
             .route(
                 "/assets/index.js",
-                routing::get_service(File::javascript(include_str!("dist/assets/index.js"))),
+                routing::get_service(File::javascript(include_str!(
+                    "iot_dashboard/dist/index.js"
+                ))),
             )
             .route(
                 "/add",
