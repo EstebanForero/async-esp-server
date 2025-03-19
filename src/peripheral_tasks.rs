@@ -102,5 +102,17 @@ fn get_risk(sensor_values: &SensorValues, gas_threshold: u16, temp_threshold: f6
 pub async fn alarms_task() {
     loop {
         let risk = RISK_SIGNAL.wait().await;
+
+        match risk {
+            Risk::Low => {
+                todo!(); // Here goes the code that should be executed when the risk is low
+            }
+            Risk::Moderate => {
+                todo!(); // Here goes the code that should be executed when the risk is moderate
+            }
+            Risk::High => {
+                todo!(); // Here goes the code that should be executed when the risk is high
+            }
+        }
     }
 }
