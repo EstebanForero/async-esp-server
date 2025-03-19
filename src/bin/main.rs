@@ -8,7 +8,8 @@ use esp_hal::timer::timg::TimerGroup;
 use esp_println::println;
 
 #[panic_handler]
-fn panic(_: &core::panic::PanicInfo) -> ! {
+fn panic(err: &core::panic::PanicInfo) -> ! {
+    println!("{err:?}");
     loop {}
 }
 
