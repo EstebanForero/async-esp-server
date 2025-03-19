@@ -40,11 +40,12 @@ pub async fn sensor_reader_task(temperature_pin : GpioPin<15>){
 pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
     let i2c_address = 0x27;
 
-    let display = lcd_display::Display::new(i2c, scl.into(), sda.into(), i2c_address);
+    let mut display = lcd_display::Display::new(i2c, scl.into(), sda.into(), i2c_address);
 
     loop {
         let values= SENSOR_VALS_SIGNAL.wait().await;
         println!("{}",values.temp);
+        display.display_temperature(values.temp);
     }
 }
 
