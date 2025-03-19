@@ -82,13 +82,7 @@ impl<'a> Display<'_> {
 
         let (int_part, dec_part) = temp.float_to_parts(1);
 
-        ufmt::uwrite!(
-            &mut temperature_string,
-            "Temperature: {}.{}",
-            int_part,
-            dec_part
-        )
-        .unwrap();
+        ufmt::uwrite!(&mut temperature_string, "Temp: {}.{}", int_part, dec_part).unwrap();
 
         self.display.reset(&mut Delay).unwrap();
         self.display.clear(&mut Delay).unwrap();
