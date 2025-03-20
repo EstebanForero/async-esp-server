@@ -2,15 +2,15 @@ use embassy_net::Stack;
 use embassy_time::Duration;
 use esp_alloc as _;
 use esp_println::println;
+use heapless::String;
 use picoserve::{
     extract,
     response::{json, File},
     routing::{self, get, post},
     AppBuilder, AppRouter, Router,
 };
-use serde::Serialize;
 
-use crate::app::{self, SensorValues, ValueHistoryArray, APP_STATE};
+use crate::app::{self, SensorValues, APP_STATE};
 
 pub struct Application;
 
@@ -55,19 +55,12 @@ impl AppBuilder for Application {
 
                     let vals = state.value_history.current_values();
 
-                    #[derive(Serialize)]
-                    struct SensorValuesInfo {
-                        sensor_values: SensorValues,
-                        has_changed: bool,
-                    }
+                    let vals_info = SensorValuesInfo {
+                        sensor_values: vals,
+                        has_changed: state.value_history.new_change(),
+                    };
 
-                    let json_value: json::Json<SensorValuesInfo> =
-                        picoserve::extract::Json(SensorValuesInfo {
-                            sensor_values: vals,
-                            has_changed: state.value_history.new_change(),
-                        });
-
-                    json_value
+                    vals_info.to_string()
                 }),
             )
             .route(
@@ -75,10 +68,9 @@ impl AppBuilder for Application {
                 get(|| async {
                     let state = APP_STATE.lock().await;
 
-                    let vals = state.value_history.get_current_values_history();
-                    let json_value: json::Json<ValueHistoryArray> = picoserve::extract::Json(vals);
+                    let vals_history = state.value_history.get_current_values_history();
 
-                    json_value
+                    vals_history.to_string()
                 }),
             )
     }
@@ -131,5 +123,34 @@ impl Default for WebApp {
         );
 
         Self { router, config }
+    }
+}
+
+struct SensorValuesInfo {
+    sensor_values: SensorValues,
+    has_changed: bool,
+}
+
+impl SensorValuesInfo {
+    fn to_string(self) -> String<14> {
+        let mut sensor_values_string = self.sensor_values.to_string();
+        let mut sensor_info_string = String::new();
+
+        sensor_info_string
+            .push_str(sensor_values_string.as_str())
+            .unwrap();
+
+        sensor_values_string.push(' ').unwrap();
+
+        println!("has changed is: {}", self.has_changed);
+        if self.has_changed {
+            println!("adding 1");
+            sensor_values_string.push('1').unwrap();
+        } else {
+            println!("adding 0");
+            sensor_values_string.push('0').unwrap();
+        }
+
+        sensor_info_string
     }
 }

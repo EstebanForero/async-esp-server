@@ -2,17 +2,41 @@ use core::{array, usize};
 
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::mutex::Mutex;
+use heapless::String;
 use serde::{Deserialize, Serialize};
+use ufmt::uwrite;
+
+use super::utils::FloatRepresentation;
 
 pub struct AppState {
     pub counter: u32,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug)]
 pub struct SensorValues {
     pub temp: f64,
     pub gas: u16,
     pub flame: bool,
+}
+
+impl SensorValues {
+    pub fn to_string(self) -> String<12> {
+        let mut string = String::new();
+
+        let (int_part, dec_part) = self.temp.float_to_parts(2);
+
+        uwrite!(
+            &mut string,
+            "{}.{},{},{}",
+            int_part,
+            dec_part,
+            self.gas,
+            self.flame as u8
+        )
+        .unwrap();
+
+        string
+    }
 }
 
 pub enum Risk {
@@ -30,8 +54,22 @@ pub struct ValueHistory<const N: usize> {
     new_change: bool,
 }
 
-#[derive(Serialize)]
 pub struct ValueHistoryArray([SensorValues; 10]);
+
+impl ValueHistoryArray {
+    pub fn to_string(self) -> String<130> {
+        let mut string = String::new();
+
+        for value in self.0 {
+            string.push_str(&value.to_string()).unwrap();
+            string.push('|').unwrap();
+        }
+
+        string.pop().unwrap();
+
+        string
+    }
+}
 
 impl<const N: usize> ValueHistory<N> {
     pub fn push_values(&mut self, sensor_values: SensorValues) {
@@ -52,9 +90,9 @@ impl<const N: usize> ValueHistory<N> {
     pub fn new_change(&mut self) -> bool {
         if self.new_change {
             self.new_change = false;
-            return true;
+            true
         } else {
-            return false;
+            false
         }
     }
 }
