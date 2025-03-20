@@ -35,7 +35,8 @@ export const fetchSensorValues = async (): Promise<SensorValuesInfo> => {
 
 export const fetchRealTimeSensorValues = async (): Promise<SensorValues> => {
   const text = await fetchText(`${BASE_URL}/values/now`);
-  return parseSensorValues(text);
+  const parsedValues = parseSensorValues(text);
+  return parsedValues
 };
 
 export const fetchSensorValuesHistory = async (): Promise<ValueHistoryArray> => {

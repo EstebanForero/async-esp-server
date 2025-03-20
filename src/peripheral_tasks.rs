@@ -6,7 +6,7 @@ use crate::temp_sensor::TemperatureSensor;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::signal::Signal;
 use embassy_time::{Duration, Timer};
-use esp_hal::gpio::{Flex, GpioPin, Level, Output, OutputConfig};
+use esp_hal::gpio::{Flex, GpioPin, Input, InputConfig, Level, Output, OutputConfig};
 use esp_hal::i2c::master::AnyI2c;
 use esp_hal::peripherals::ADC1;
 use esp_println::println;
@@ -19,7 +19,7 @@ pub async fn sensor_reader_task(
     temperature_pin: GpioPin<15>,
     adc: ADC1,
     pin: GpioPin<34>,
-    flame_pin: GpioPin<5>,
+    flame_pin: GpioPin<19>,
 ) {
     let mut wire_pin = Flex::new(temperature_pin);
     wire_pin.set_as_open_drain(esp_hal::gpio::Pull::Up);
@@ -27,7 +27,9 @@ pub async fn sensor_reader_task(
 
     let mut gas_sensor = GasSensor::new(adc, pin);
     let mut temperature_sensor = TemperatureSensor::new(&mut wire_pin).await;
-    let flame_sensor = Output::new(flame_pin, Level::High, OutputConfig::default());
+
+    let input_config = InputConfig::default();
+    let flame_sensor = Input::new(flame_pin, input_config);
 
     loop {
         let Ok(temp) = temperature_sensor.read_temperature() else {
@@ -36,14 +38,14 @@ pub async fn sensor_reader_task(
 
         let gas_value = gas_sensor.get_value();
 
-        let flame_value = flame_sensor.is_set_low();
+        let flame_value = flame_sensor.is_low();
 
         SENSOR_VALS_SIGNAL.signal(SensorValues {
             temp,
             gas: gas_value,
             flame: flame_value,
         });
-        Timer::after(Duration::from_millis(250)).await;
+        Timer::after(Duration::from_millis(1000)).await;
     }
 }
 

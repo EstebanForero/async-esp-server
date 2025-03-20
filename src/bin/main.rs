@@ -58,7 +58,7 @@ async fn main(spawner: Spawner) {
         peripherals.GPIO15,
         peripherals.ADC1,
         peripherals.GPIO34,
-        peripherals.GPIO5,
+        peripherals.GPIO19,
     ));
     spawner.must_spawn(display_task(
         peripherals.I2C0.into(),
