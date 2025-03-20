@@ -1,7 +1,6 @@
 use embassy_net::Stack;
 use embassy_time::Duration;
 use esp_alloc as _;
-use esp_println::println;
 use heapless::String;
 use picoserve::{
     extract,
@@ -12,6 +11,7 @@ use picoserve::{
 
 use crate::{
     app::{self, SensorValues, APP_STATE},
+    cors_layer::CorsLayer,
     peripheral_tasks::SENSOR_VALS_SIGNAL,
 };
 
@@ -86,6 +86,7 @@ impl AppBuilder for Application {
                     vals_history.to_string()
                 }),
             )
+            .layer(CorsLayer)
     }
 }
 

@@ -2,6 +2,7 @@
 #![feature(impl_trait_in_assoc_type)]
 
 pub mod app;
+pub mod cors_layer;
 pub mod gas_sensor;
 pub mod lcd_display;
 pub mod peripheral_tasks;
