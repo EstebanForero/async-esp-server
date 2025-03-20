@@ -171,22 +171,23 @@ impl<T: Default + Copy, const N: usize> History<T, N> {
     }
 }
 
-pub struct App {
-    pub config: Config,
-    pub value_history: ValueHistory<HISTORY_LENGTH>,
-}
+pub static CONFIG: Mutex<CriticalSectionRawMutex, Config> = Mutex::new(Config {
+    temp_threshold: 17.,
+    gas_threshold: 300,
+    alarms_enabled: true,
+    data_point_interval: 3,
+});
 
-pub static APP_STATE: Mutex<CriticalSectionRawMutex, App> = Mutex::new(App {
-    config: Config {
-        temp_threshold: 17.,
-        gas_threshold: 300,
-        alarms_enabled: true,
-        data_point_interval: 3,
-    },
-    value_history: ValueHistory {
+pub static VALUE_HISTORY: Mutex<CriticalSectionRawMutex, ValueHistory<10>> =
+    Mutex::new(ValueHistory {
         temp: History::default_value(0.0),
         ppm: History::default_value(0),
         flame: History::default_value(false),
         new_change: true,
-    },
+    });
+
+pub static CURRENT_VALUE: Mutex<CriticalSectionRawMutex, SensorValues> = Mutex::new(SensorValues {
+    temp: 0.,
+    gas: 0,
+    flame: false,
 });

@@ -1,18 +1,37 @@
 use super::app::{Risk, SensorValues};
-use crate::app::APP_STATE;
+use crate::app::{APP_STATE, CONFIG, VALUE_HISTORY};
 use crate::gas_sensor::GasSensor;
 use crate::lcd_display;
 use crate::temp_sensor::TemperatureSensor;
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::signal::Signal;
-use embassy_time::{Duration, Timer};
-use esp_hal::gpio::{Flex, GpioPin, Input, InputConfig, Level, Output, OutputConfig};
+use embassy_time::Timer;
+use esp_hal::gpio::{Flex, GpioPin, Input, InputConfig};
 use esp_hal::i2c::master::AnyI2c;
 use esp_hal::peripherals::ADC1;
 use esp_println::println;
 
 pub static SENSOR_VALS_SIGNAL: Signal<CriticalSectionRawMutex, SensorValues> = Signal::new();
 static RISK_SIGNAL: Signal<CriticalSectionRawMutex, Risk> = Signal::new();
+
+#[embassy_executor::task]
+pub async fn test_load() {
+    loop {
+        let mut num = CONFIG.lock().await.gas_threshold;
+
+        for _i in 0..10000 {
+            num += 1;
+        }
+
+        SENSOR_VALS_SIGNAL.signal(SensorValues {
+            temp: num as f64,
+            gas: num,
+            flame: true,
+        });
+
+        Timer::after_millis(200).await;
+    }
+}
 
 #[embassy_executor::task]
 pub async fn sensor_reader_task(
@@ -59,26 +78,23 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
 
     loop {
         let values = SENSOR_VALS_SIGNAL.wait().await;
-        let mut app_state = APP_STATE.lock().await;
+        let config = CONFIG.lock().await.clone();
 
         println!("{:#?}", values);
         display.display_temperature(values.temp);
         display.display_gas(values.gas);
 
-        let risk = get_risk(
-            &values,
-            app_state.config.gas_threshold,
-            app_state.config.temp_threshold,
-        );
+        let risk = get_risk(&values, config.gas_threshold, config.temp_threshold);
 
-        if save_counter > app_state.config.data_point_interval {
-            app_state.value_history.push_values(values);
+        if save_counter > config.data_point_interval {
+            let mut value_history = VALUE_HISTORY.lock().await;
+            value_history.push_values(values);
             save_counter = 0;
         }
 
         save_counter += 1;
 
-        if app_state.config.alarms_enabled {
+        if config.alarms_enabled {
             RISK_SIGNAL.signal(risk);
         }
     }
