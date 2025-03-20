@@ -12,7 +12,7 @@ pub struct AppState {
     pub counter: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct SensorValues {
     pub temp: f64,
     pub gas: u16,
@@ -185,7 +185,7 @@ pub static APP_STATE: Mutex<CriticalSectionRawMutex, App> = Mutex::new(App {
     value_history: ValueHistory {
         temp: History::default_value(0.0),
         ppm: History::default_value(0),
-        flame: History::default_value(true),
+        flame: History::default_value(false),
         new_change: true,
     },
 });

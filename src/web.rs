@@ -10,7 +10,10 @@ use picoserve::{
     AppBuilder, AppRouter, Router,
 };
 
-use crate::app::{self, SensorValues, APP_STATE};
+use crate::{
+    app::{self, SensorValues, APP_STATE},
+    peripheral_tasks::SENSOR_VALS_SIGNAL,
+};
 
 pub struct Application;
 
@@ -36,7 +39,9 @@ impl AppBuilder for Application {
             .route(
                 "/config",
                 post(|extract::Json::<app::Config>(config)| async move {
-                    println!("{:#?}", config);
+                    let mut state = APP_STATE.lock().await;
+
+                    state.config = config
                 })
                 .get(|| async {
                     let state = APP_STATE.lock().await;
@@ -61,6 +66,14 @@ impl AppBuilder for Application {
                     };
 
                     vals_info.to_string()
+                }),
+            )
+            .route(
+                "/values/now",
+                get(|| async {
+                    let real_time_values = SENSOR_VALS_SIGNAL.try_take().unwrap_or_default();
+
+                    real_time_values.to_string()
                 }),
             )
             .route(

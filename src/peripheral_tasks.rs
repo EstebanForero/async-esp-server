@@ -11,7 +11,7 @@ use esp_hal::i2c::master::AnyI2c;
 use esp_hal::peripherals::ADC1;
 use esp_println::println;
 
-static SENSOR_VALS_SIGNAL: Signal<CriticalSectionRawMutex, SensorValues> = Signal::new();
+pub static SENSOR_VALS_SIGNAL: Signal<CriticalSectionRawMutex, SensorValues> = Signal::new();
 static RISK_SIGNAL: Signal<CriticalSectionRawMutex, Risk> = Signal::new();
 
 #[embassy_executor::task]
