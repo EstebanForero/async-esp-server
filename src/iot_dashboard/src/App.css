@@ -41,3 +41,46 @@
 .nav-link:hover {
   background-color: var(--a);
 }
+
+/* Styles for sensor display */
+.home-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sensor-section {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  background-color: var(--s);
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.real-time {
+  flex: 1;
+  padding-right: 10px;
+}
+
+.history {
+  flex: 1;
+  padding-left: 10px;
+}
+
+h2,
+h3 {
+  color: var(--a);
+  margin-bottom: 10px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  margin-bottom: 5px;
+  color: var(--t);
+}

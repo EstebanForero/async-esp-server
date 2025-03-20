@@ -1,36 +1,41 @@
-interface Config {
+export interface EspConfig {
   temp_threshold: number;
   gas_threshold: number;
   alarms_enabled: boolean;
   data_point_interval: number;
 }
 
-interface SensorValues {
+export interface SensorValues {
   temp: number;
   gas: number;
   flame: boolean;
 }
 
-interface SensorValuesInfo {
+export interface SensorValuesInfo {
   sensor_values: SensorValues;
   has_changed: boolean;
 }
 
-interface ValueHistoryArray {
+export interface ValueHistoryArray {
   values: SensorValues[];
 }
 
 const BASE_URL = "http://192.168.0.243";
 //const BASE_URL = `${window.location.protocol}//${window.location.host}/config`;
 
-export const fetchConfig = async (): Promise<Config> => fetchJson<Config>(`${BASE_URL}/config`);
+export const fetchConfig = async (): Promise<EspConfig> => fetchJson<EspConfig>(`${BASE_URL}/config`);
 
-export const updateConfig = async (config: Config): Promise<void> => postJson(`${BASE_URL}/config`, config);
+export const updateConfig = async (config: EspConfig): Promise<void> => postJson(`${BASE_URL}/config`, config);
 
 export const fetchSensorValues = async (): Promise<SensorValuesInfo> => {
   const text = await fetchText(`${BASE_URL}/values`);
   const [valuesPart, hasChangedPart] = text.split(" ");
   return { sensor_values: parseSensorValues(valuesPart), has_changed: hasChangedPart === "1" };
+};
+
+export const fetchRealTimeSensorValues = async (): Promise<SensorValues> => {
+  const text = await fetchText(`${BASE_URL}/values/now`);
+  return parseSensorValues(text);
 };
 
 export const fetchSensorValuesHistory = async (): Promise<ValueHistoryArray> => {
