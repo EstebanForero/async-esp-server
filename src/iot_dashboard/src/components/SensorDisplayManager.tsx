@@ -36,6 +36,7 @@ const SensorDisplayManager = (props: Props) => {
 
   const timeOutRealTime = () => {
     console.log('timeout real time called')
+    console.log('The real time data is: ', JSON.stringify(realTimeData()))
     refetchRealTimeData()
     setTimeout(() => timeOutRealTime(), props.realTimeRefetchRate)
   }

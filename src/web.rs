@@ -71,7 +71,7 @@ impl AppBuilder for Application {
             .route(
                 "/values/now",
                 get(|| async {
-                    let real_time_values = SENSOR_VALS_SIGNAL.try_take().unwrap_or_default();
+                    let real_time_values = SENSOR_VALS_SIGNAL.wait().await;
 
                     real_time_values.to_string()
                 }),

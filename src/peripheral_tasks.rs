@@ -19,7 +19,7 @@ pub async fn sensor_reader_task(
     temperature_pin: GpioPin<15>,
     adc: ADC1,
     pin: GpioPin<34>,
-    flame_pin: GpioPin<2>,
+    flame_pin: GpioPin<5>,
 ) {
     let mut wire_pin = Flex::new(temperature_pin);
     wire_pin.set_as_open_drain(esp_hal::gpio::Pull::Up);
@@ -43,7 +43,7 @@ pub async fn sensor_reader_task(
             gas: gas_value,
             flame: flame_value,
         });
-        Timer::after(Duration::from_millis(500)).await;
+        Timer::after(Duration::from_millis(250)).await;
     }
 }
 
