@@ -48,19 +48,19 @@ export const fetchSensorValuesHistory = async (): Promise<ValueHistoryArray> => 
 };
 
 async function fetchText(url: string): Promise<string> {
-  const response = await fetch(url, { method: "GET", headers: { "Content-Type": "text/plain" } });
+  const response = await fetch(url);
   if (!response.ok) throw new Error(`Failed to fetch data from ${url}: ${response.statusText}`);
   return response.text();
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(url, { method: "GET", headers: { "Content-Type": "application/json" } });
+  const response = await fetch(url);
   if (!response.ok) throw new Error(`Failed to fetch JSON from ${url}: ${response.statusText}`);
   return response.json();
 }
 
 async function postJson(url: string, data: any): Promise<void> {
-  const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+  const response = await fetch(url, { method: "POST", body: JSON.stringify(data) });
   if (!response.ok) throw new Error(`Failed to post data to ${url}: ${response.statusText}`);
 }
 

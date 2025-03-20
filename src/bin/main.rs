@@ -54,7 +54,7 @@ async fn main(spawner: Spawner) {
 
     println!("Web server started");
 
-    // spawner.must_spawn(test_load());
+    spawner.must_spawn(test_load());
 
     //spawner.must_spawn(sensor_reader_task(
     //    peripherals.GPIO15,

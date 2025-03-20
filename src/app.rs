@@ -13,7 +13,7 @@ pub struct AppState {
     pub counter: u32,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct SensorValues {
     pub temp: f64,
     pub gas: u16,

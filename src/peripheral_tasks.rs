@@ -17,17 +17,19 @@ static RISK_SIGNAL: Signal<CriticalSectionRawMutex, Risk> = Signal::new();
 #[embassy_executor::task]
 pub async fn test_load() {
     loop {
-        let mut num = CONFIG.lock().await.gas_threshold;
+        let last_values = VALUE_HISTORY.lock().await.current_values();
 
-        for _i in 0..10000 {
-            num += 1;
-        }
+        let sensor_values = SensorValues {
+            temp: last_values.temp + 0.1,
+            gas: last_values.gas + 10,
+            flame: !last_values.flame,
+        };
 
-        SENSOR_VALS_SIGNAL.signal(SensorValues {
-            temp: num as f64,
-            gas: num,
-            flame: true,
-        });
+        SENSOR_VALS_SIGNAL.signal(sensor_values.clone());
+
+        let mut value_history = VALUE_HISTORY.lock().await;
+
+        value_history.push_values(sensor_values);
 
         Timer::after_millis(200).await;
     }
