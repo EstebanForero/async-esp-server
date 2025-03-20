@@ -25,6 +25,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+./src/iot_dashboard/.vite
 ./src/iot_dashboard/node_modules
 ./src/iot_dashboard/dist
 ./src/iot_dashboard/ dist-ssr
