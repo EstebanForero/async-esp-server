@@ -1,0 +1,62 @@
+interface Config {
+  temp_threshold: number;
+  gas_threshold: number;
+  alarms_enabled: boolean;
+  data_point_interval: number;
+}
+
+interface SensorValues {
+  temp: number;
+  gas: number;
+  flame: boolean;
+}
+
+interface SensorValuesInfo {
+  sensor_values: SensorValues;
+  has_changed: boolean;
+}
+
+interface ValueHistoryArray {
+  values: SensorValues[];
+}
+
+const BASE_URL = "http://192.168.0.243";
+//const BASE_URL = `${window.location.protocol}//${window.location.host}/config`;
+
+export const fetchConfig = async (): Promise<Config> => fetchJson<Config>(`${BASE_URL}/config`);
+
+export const updateConfig = async (config: Config): Promise<void> => postJson(`${BASE_URL}/config`, config);
+
+export const fetchSensorValues = async (): Promise<SensorValuesInfo> => {
+  const text = await fetchText(`${BASE_URL}/values`);
+  const [valuesPart, hasChangedPart] = text.split(" ");
+  return { sensor_values: parseSensorValues(valuesPart), has_changed: hasChangedPart === "1" };
+};
+
+export const fetchSensorValuesHistory = async (): Promise<ValueHistoryArray> => {
+  const text = await fetchText(`${BASE_URL}/values/history`);
+  const values = text.split("|").map(parseSensorValues);
+  return { values };
+};
+
+async function fetchText(url: string): Promise<string> {
+  const response = await fetch(url, { method: "GET", headers: { "Content-Type": "text/plain" } });
+  if (!response.ok) throw new Error(`Failed to fetch data from ${url}: ${response.statusText}`);
+  return response.text();
+}
+
+async function fetchJson<T>(url: string): Promise<T> {
+  const response = await fetch(url, { method: "GET", headers: { "Content-Type": "application/json" } });
+  if (!response.ok) throw new Error(`Failed to fetch JSON from ${url}: ${response.statusText}`);
+  return response.json();
+}
+
+async function postJson(url: string, data: any): Promise<void> {
+  const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) });
+  if (!response.ok) throw new Error(`Failed to post data to ${url}: ${response.statusText}`);
+}
+
+function parseSensorValues(valuesStr: string): SensorValues {
+  const [temp, gas, flame] = valuesStr.split(",");
+  return { temp: parseFloat(temp), gas: parseInt(gas, 10), flame: flame === "1" };
+}
