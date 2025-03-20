@@ -133,22 +133,19 @@ struct SensorValuesInfo {
 
 impl SensorValuesInfo {
     fn to_string(self) -> String<14> {
-        let mut sensor_values_string = self.sensor_values.to_string();
+        let sensor_values_string = self.sensor_values.to_string();
         let mut sensor_info_string = String::new();
 
         sensor_info_string
             .push_str(sensor_values_string.as_str())
             .unwrap();
 
-        sensor_values_string.push(' ').unwrap();
+        sensor_info_string.push(' ').unwrap();
 
-        println!("has changed is: {}", self.has_changed);
         if self.has_changed {
-            println!("adding 1");
-            sensor_values_string.push('1').unwrap();
+            sensor_info_string.push('1').unwrap();
         } else {
-            println!("adding 0");
-            sensor_values_string.push('0').unwrap();
+            sensor_info_string.push('0').unwrap();
         }
 
         sensor_info_string
