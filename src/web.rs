@@ -10,7 +10,7 @@ use picoserve::{
 };
 
 use crate::{
-    app::{self, SensorValues, APP_STATE},
+    app::{self, SensorValues, CONFIG, VALUE_HISTORY},
     cors_layer::CorsLayer,
     peripheral_tasks::SENSOR_VALS_SIGNAL,
 };
@@ -39,14 +39,12 @@ impl AppBuilder for Application {
             .route(
                 "/config",
                 post(|extract::Json::<app::Config>(config)| async move {
-                    let mut state = APP_STATE.lock().await;
+                    let mut state = CONFIG.lock().await;
 
-                    state.config = config
+                    *state = config
                 })
                 .get(|| async {
-                    let state = APP_STATE.lock().await;
-
-                    let config = state.config.clone();
+                    let config = CONFIG.lock().await.clone();
 
                     let json_value: json::Json<app::Config> = picoserve::extract::Json(config);
 
@@ -56,14 +54,14 @@ impl AppBuilder for Application {
             .route(
                 "/values",
                 get(|| async {
-                    let mut state = APP_STATE.lock().await;
-
-                    let vals = state.value_history.current_values();
+                    let mut value_history = VALUE_HISTORY.lock().await;
 
                     let vals_info = SensorValuesInfo {
-                        sensor_values: vals,
-                        has_changed: state.value_history.new_change(),
+                        sensor_values: value_history.current_values(),
+                        has_changed: value_history.new_change(),
                     };
+
+                    drop(value_history);
 
                     vals_info.to_string()
                 }),
@@ -79,11 +77,9 @@ impl AppBuilder for Application {
             .route(
                 "/values/history",
                 get(|| async {
-                    let state = APP_STATE.lock().await;
+                    let value_history = VALUE_HISTORY.lock().await.get_current_values_history();
 
-                    let vals_history = state.value_history.get_current_values_history();
-
-                    vals_history.to_string()
+                    value_history.to_string()
                 }),
             )
             .layer(CorsLayer)
