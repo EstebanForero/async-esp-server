@@ -11,7 +11,16 @@ const SensorDisplayManager = (props: Props) => {
   const [historyData, { mutate: mutateHistory }] = createResource<ValueHistoryArray>(fetchSensorValuesHistory);
 
   const [currentSensorData, { refetch: refetchCurrentSensorData }] = createResource<SensorValuesInfo>(fetchSensorValues);
-  setTimeout(() => refetchCurrentSensorData(), props.sensorRefetchRate)
+
+  const timeCurrentSensor = () => {
+    console.log('timeout current values called')
+    refetchCurrentSensorData()
+    setTimeout(() => timeCurrentSensor(), props.sensorRefetchRate)
+  }
+
+  setTimeout(() => {
+    timeCurrentSensor()
+  }, props.sensorRefetchRate + (props.realTimeRefetchRate / 2))
 
   createEffect(() => {
     let currentData = currentSensorData()
@@ -24,7 +33,16 @@ const SensorDisplayManager = (props: Props) => {
   })
 
   const [realTimeData, { refetch: refetchRealTimeData }] = createResource<SensorValues>(fetchRealTimeSensorValues);
-  setTimeout(() => refetchRealTimeData(), props.sensorRefetchRate)
+
+  const timeOutRealTime = () => {
+    console.log('timeout real time called')
+    refetchRealTimeData()
+    setTimeout(() => timeOutRealTime(), props.realTimeRefetchRate)
+  }
+
+  setTimeout(() => {
+    timeOutRealTime()
+  }, props.realTimeRefetchRate)
 
   const formatTemp = (value: number | boolean) => (typeof value === "number" ? value.toFixed(2) : "N/A");
   const formatGas = (value: number | boolean) => (typeof value === "number" ? value.toString() : "N/A");

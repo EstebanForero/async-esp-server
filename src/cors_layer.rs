@@ -1,14 +1,14 @@
+use anyhow::Ok;
 use picoserve::{
     io::Read,
     response::{ResponseWriter, StatusCode},
 };
 
-struct CorsResponseWriter<'a, W> {
+struct CorsResponseWriter<W> {
     response_writer: W,
-    request_method: &'a str,
 }
 
-impl<'a, W: ResponseWriter> ResponseWriter for CorsResponseWriter<'a, W> {
+impl<W: ResponseWriter> ResponseWriter for CorsResponseWriter<W> {
     type Error = W::Error;
 
     async fn write_response<
@@ -20,26 +20,39 @@ impl<'a, W: ResponseWriter> ResponseWriter for CorsResponseWriter<'a, W> {
         connection: picoserve::response::Connection<'_, R>,
         response: picoserve::response::Response<H, B>,
     ) -> Result<picoserve::ResponseSent, Self::Error> {
-        if self.request_method == "OPTIONS" {
-            let new_response = response
-                .with_header("Access-Control-Allow-Origin", "*")
-                .with_header(
-                    "Access-Control-Allow-Methods",
-                    "GET, POST, PUT, DELETE, OPTIONS",
-                )
-                .with_header("Access-Control-Allow-Headers", "*")
-                .with_status_code(StatusCode::new(200));
+        //if self.request_method == "OPTIONS" {
+        //    let new_response = response
+        //        .with_header("Access-Control-Allow-Origin", "*")
+        //        .with_header(
+        //            "Access-Control-Allow-Methods",
+        //            "GET, POST, PUT, DELETE, OPTIONS",
+        //        )
+        //        .with_header("Access-Control-Allow-Headers", "*")
+        //        .with_status_code(StatusCode::new(200));
+        //
+        //    self.response_writer
+        //        .write_response(connection, new_response)
+        //        .await
+        //} else {
+        //    let new_response = response.with_header("Access-Control-Allow-Origin", "*");
+        //
+        //    self.response_writer
+        //        .write_response(connection, new_response)
+        //        .await
+        //}
 
-            self.response_writer
-                .write_response(connection, new_response)
-                .await
-        } else {
-            let new_response = response.with_header("Access-Control-Allow-Origin", "*");
+        let new_response = response
+            .with_header("Access-Control-Allow-Origin", "*")
+            .with_header(
+                "Access-Control-Allow-Methods",
+                "GET, POST, PUT, DELETE, OPTIONS",
+            )
+            .with_header("Access-Control-Allow-Headers", "*")
+            .with_status_code(StatusCode::new(200));
 
-            self.response_writer
-                .write_response(connection, new_response)
-                .await
-        }
+        self.response_writer
+            .write_response(connection, new_response)
+            .await
     }
 }
 
@@ -65,10 +78,7 @@ impl<State, PathParameters> picoserve::routing::Layer<State, PathParameters> for
         next.run(
             state,
             path_parameters,
-            CorsResponseWriter {
-                response_writer,
-                request_method: _request_parts.method(),
-            },
+            CorsResponseWriter { response_writer },
         )
         .await
     }

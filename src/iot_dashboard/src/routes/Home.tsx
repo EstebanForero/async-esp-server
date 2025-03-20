@@ -3,7 +3,7 @@ import SensorDisplayManager from "../components/SensorDisplayManager"
 const Home = () => {
   return (
     <div>
-      <SensorDisplayManager realTimeRefetchRate={1000} sensorRefetchRate={1000} />
+      <SensorDisplayManager realTimeRefetchRate={4000} sensorRefetchRate={4000} />
     </div>
   )
 }
