@@ -1,12 +1,14 @@
-use esp_println::println;
-use picoserve::{io::Read, request::Path, response::ResponseWriter};
+use picoserve::{
+    io::Read,
+    response::{ResponseWriter, StatusCode},
+};
 
-struct TimedResponseWriter<'r, W> {
-    path: Path<'r>,
+struct CorsResponseWriter<'a, W> {
     response_writer: W,
+    request_method: &'a str,
 }
 
-impl<'r, W: ResponseWriter> ResponseWriter for TimedResponseWriter<'r, W> {
+impl<'a, W: ResponseWriter> ResponseWriter for CorsResponseWriter<'a, W> {
     type Error = W::Error;
 
     async fn write_response<
@@ -18,46 +20,26 @@ impl<'r, W: ResponseWriter> ResponseWriter for TimedResponseWriter<'r, W> {
         connection: picoserve::response::Connection<'_, R>,
         response: picoserve::response::Response<H, B>,
     ) -> Result<picoserve::ResponseSent, Self::Error> {
-        let status_code = response.status_code();
+        if self.request_method == "OPTIONS" {
+            let new_response = response
+                .with_header("Access-Control-Allow-Origin", "*")
+                .with_header(
+                    "Access-Control-Allow-Methods",
+                    "GET, POST, PUT, DELETE, OPTIONS",
+                )
+                .with_header("Access-Control-Allow-Headers", "*")
+                .with_status_code(StatusCode::new(200));
 
-        let result = self
-            .response_writer
-            .write_response(connection, response)
-            .await;
+            self.response_writer
+                .write_response(connection, new_response)
+                .await
+        } else {
+            let new_response = response.with_header("Access-Control-Allow-Origin", "*");
 
-        println!("Path: {}; Status Code: {}", self.path, status_code,);
-
-        result
-    }
-}
-
-struct CorsResponseWriter<W> {
-    response_writer: W,
-}
-
-impl<W: ResponseWriter> ResponseWriter for CorsResponseWriter<W> {
-    type Error = W::Error;
-
-    async fn write_response<
-        R: Read<Error = Self::Error>,
-        H: picoserve::response::HeadersIter,
-        B: picoserve::response::Body,
-    >(
-        self,
-        connection: picoserve::response::Connection<'_, R>,
-        response: picoserve::response::Response<H, B>,
-    ) -> Result<picoserve::ResponseSent, Self::Error> {
-        let new_response = response
-            .with_header("Access-Control-Allow-Origin", "*")
-            .with_header(
-                "Access-Control-Allow-Methods",
-                "GET, POST, PUT, DELETE, OPTIONS",
-            )
-            .with_header("Access-Control-Allow-Headers", "*");
-
-        self.response_writer
-            .write_response(connection, new_response)
-            .await
+            self.response_writer
+                .write_response(connection, new_response)
+                .await
+        }
     }
 }
 
@@ -83,7 +65,10 @@ impl<State, PathParameters> picoserve::routing::Layer<State, PathParameters> for
         next.run(
             state,
             path_parameters,
-            CorsResponseWriter { response_writer },
+            CorsResponseWriter {
+                response_writer,
+                request_method: _request_parts.method(),
+            },
         )
         .await
     }
