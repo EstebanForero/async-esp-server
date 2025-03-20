@@ -16,7 +16,7 @@ function App() {
   return (
     <>
       <Navbar setCurrentRoute={setCurrentRoute} />
-      {currentRoute() === "History" && <History sensorRefetchRate={1000} />}
+      {currentRoute() === "History" && <History sensorRefetchRate={6000} />}
       {currentRoute() === "Values" && <Values realTimeRefetchRate={1000} />}
       {currentRoute() === "Home" && <Home />}
       {currentRoute() === "Settings" && <Settings />}

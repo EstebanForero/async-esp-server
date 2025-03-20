@@ -26,7 +26,7 @@ const History = (props: Props) => {
       <section class="sensor-history">
         <h3>Temperature History</h3>
         <ul>
-          {historyData()?.values?.map((val) => (
+          {historyData()?.values?.reverse().map((val) => (
             <li>{val.temp.toFixed(2)} °C</li>
           )) ?? "Loading..."}
         </ul>
@@ -34,7 +34,7 @@ const History = (props: Props) => {
       <section class="sensor-history">
         <h3>Gas History</h3>
         <ul>
-          {historyData()?.values?.map((val) => (
+          {historyData()?.values?.reverse().map((val) => (
             <li>{val.gas.toString()} ppm</li>
           )) ?? "Loading..."}
         </ul>
@@ -42,7 +42,7 @@ const History = (props: Props) => {
       <section class="sensor-history">
         <h3>Flame History</h3>
         <ul>
-          {historyData()?.values?.map((val) => (
+          {historyData()?.values?.reverse().map((val) => (
             <li>{val.flame ? "Detected" : "Not Detected"}</li>
           )) ?? "Loading..."}
         </ul>

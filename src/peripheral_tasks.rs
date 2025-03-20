@@ -16,22 +16,63 @@ static RISK_SIGNAL: Signal<CriticalSectionRawMutex, Risk> = Signal::new();
 
 #[embassy_executor::task]
 pub async fn test_load() {
-    loop {
-        let last_values = VALUE_HISTORY.lock().await.current_values();
+    let mut last_values = SensorValues {
+        temp: 0.,
+        gas: 0,
+        flame: false,
+    };
 
-        let sensor_values = SensorValues {
-            temp: last_values.temp + 0.1,
-            gas: last_values.gas + 10,
+    let mut save_counter = 0;
+
+    let mut state = State::Increase;
+
+    enum State {
+        Decrease,
+        Increase,
+    }
+
+    loop {
+        let config = CONFIG.lock().await.clone();
+
+        let mut sensor_values = SensorValues {
+            temp: last_values.temp,
+            gas: last_values.gas,
             flame: !last_values.flame,
         };
 
+        match state {
+            State::Decrease => {
+                sensor_values.temp -= 0.01;
+                sensor_values.gas -= 1
+            }
+            State::Increase => {
+                sensor_values.temp += 0.01;
+                sensor_values.gas += 1
+            }
+        }
+
+        if sensor_values.temp > 90. || sensor_values.gas > 9000 {
+            state = State::Decrease;
+        }
+
+        if sensor_values.temp < 5. || sensor_values.gas < 50 {
+            state = State::Increase;
+        }
+
+        last_values = sensor_values.clone();
+
+        save_counter += 1;
+
         SENSOR_VALS_SIGNAL.signal(sensor_values.clone());
 
-        let mut value_history = VALUE_HISTORY.lock().await;
+        if save_counter > config.data_point_interval {
+            let mut value_history = VALUE_HISTORY.lock().await;
+            println!("pushing values: {:?}", sensor_values);
+            value_history.push_values(sensor_values);
+            save_counter = 0;
+        }
 
-        value_history.push_values(sensor_values);
-
-        Timer::after_millis(200).await;
+        Timer::after_millis(50).await;
     }
 }
 
@@ -82,7 +123,6 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
         let values = SENSOR_VALS_SIGNAL.wait().await;
         let config = CONFIG.lock().await.clone();
 
-        println!("{:#?}", values);
         display.display_temperature(values.temp);
         display.display_gas(values.gas);
 
