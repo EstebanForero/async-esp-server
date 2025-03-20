@@ -1,5 +1,5 @@
 use super::app::{Risk, SensorValues};
-use crate::app::{APP_STATE, CONFIG, VALUE_HISTORY};
+use crate::app::{CONFIG, VALUE_HISTORY};
 use crate::gas_sensor::GasSensor;
 use crate::lcd_display;
 use crate::temp_sensor::TemperatureSensor;
