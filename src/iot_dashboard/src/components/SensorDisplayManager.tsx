@@ -10,12 +10,12 @@ interface Props {
 const SensorDisplayManager = (props: Props) => {
   const [historyData, { mutate: mutateHistory }] = createResource<ValueHistoryArray>(fetchSensorValuesHistory);
   const [currentSensorData, { refetch: refetchCurrentSensorData }] = createResource<SensorValuesInfo>(fetchSensorValues);
-  const [realTimeData, { refetch: refetchRealTimeData }] = createResource<SensorValues>(fetchRealTimeSensorValues);
+  const [realTimeData, { refetch: refetchRealTimeData, }] = createResource<SensorValues>(fetchRealTimeSensorValues);
 
   const sensorInterval = setInterval(() => {
     console.log("Fetching current sensor data...");
     refetchCurrentSensorData();
-  }, props.sensorRefetchRate);
+  }, props.sensorRefetchRate, props.sensorRefetchRate / 2);
 
   const realTimeInterval = setInterval(() => {
     console.log("Fetching real-time sensor data...");

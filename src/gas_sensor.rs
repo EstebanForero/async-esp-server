@@ -1,3 +1,4 @@
+use embassy_time::Timer;
 use esp_hal::{
     analog::adc::{Adc, AdcConfig, AdcPin},
     gpio::GpioPin,
@@ -23,13 +24,14 @@ impl<'a> GasSensor<'_> {
         Self { adc, analog_pin }
     }
 
-    pub fn get_value(&mut self) -> u16 {
+    pub async fn get_value(&mut self) -> u16 {
         let value;
         loop {
             let val_err = self.adc.read_oneshot(&mut self.analog_pin);
 
             if let Err(err) = val_err {
                 println!("Error in gas sensor get_value {err:?}");
+                Timer::after_millis(50).await;
                 continue;
             }
 

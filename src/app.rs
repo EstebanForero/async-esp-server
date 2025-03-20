@@ -2,6 +2,7 @@ use core::{array, usize};
 
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::mutex::Mutex;
+use esp_println::println;
 use heapless::String;
 use serde::{Deserialize, Serialize};
 use ufmt::uwrite;
@@ -189,5 +190,3 @@ pub static APP_STATE: Mutex<CriticalSectionRawMutex, App> = Mutex::new(App {
         new_change: true,
     },
 });
-
-pub static STATE: Mutex<CriticalSectionRawMutex, AppState> = Mutex::new(AppState { counter: 0 });

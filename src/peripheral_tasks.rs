@@ -36,7 +36,7 @@ pub async fn sensor_reader_task(
             continue;
         };
 
-        let gas_value = gas_sensor.get_value();
+        let gas_value = gas_sensor.get_value().await;
 
         let flame_value = flame_sensor.is_low();
 
@@ -45,7 +45,7 @@ pub async fn sensor_reader_task(
             gas: gas_value,
             flame: flame_value,
         });
-        Timer::after(Duration::from_millis(1000)).await;
+        Timer::after_millis(900).await;
     }
 }
 
