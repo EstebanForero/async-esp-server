@@ -12,11 +12,11 @@ const RiskNotifier = (props: Props) => {
 
   createEffect(() => {
     const config = getConfigStore();
-    console.log("RiskNotifier rendering, sensorValues:", JSON.stringify(props.sensorValues));
-    console.log("The config is: ", JSON.stringify(config))
+    //console.log("RiskNotifier rendering, sensorValues:", JSON.stringify(props.sensorValues));
+    //console.log("The config is: ", JSON.stringify(config))
 
     if (!config || !props.sensorValues) {
-      console.log("Effect skipped: config or sensorValues missing");
+      //console.log("Effect skipped: config or sensorValues missing");
       return;
     }
 
@@ -24,23 +24,23 @@ const RiskNotifier = (props: Props) => {
 
     if (props.sensorValues.flame) {
       setRisk("High");
-      console.log("setting high risk");
+      //console.log("setting high risk");
       return;
     }
 
     if (props.sensorValues.gas > config.gas_threshold && props.sensorValues.temp > config.temp_threshold) {
       setRisk("High");
-      console.log("setting high risk");
+      //console.log("setting high risk");
       return;
     }
 
     if (props.sensorValues.gas > config.gas_threshold || props.sensorValues.temp > config.temp_threshold) {
       setRisk("Moderate");
-      console.log("setting moderate risk");
+      //console.log("setting moderate risk");
       return;
     }
 
-    console.log("setting low risk");
+    //console.log("setting low risk");
     setRisk("Low");
   })
 

@@ -12,7 +12,7 @@ use picoserve::{
 use crate::{
     app::{self, SensorValues, CONFIG, VALUE_HISTORY},
     cors_layer::CorsLayer,
-    peripheral_tasks::SENSOR_VALS_SIGNAL,
+    peripheral_tasks::{RISK_SIGNAL, SENSOR_VALS_SIGNAL},
 };
 
 pub struct Application;

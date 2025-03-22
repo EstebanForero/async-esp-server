@@ -11,7 +11,7 @@ const Values = (props: Props) => {
 
   const realTimeInterval = setInterval(() => {
     if (!realTimeData.loading) {
-      console.log("Fetching real-time sensor data...");
+      //console.log("Fetching real-time sensor data...");
       refetch();
       resetErrorBoundaries()
     }
