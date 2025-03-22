@@ -143,7 +143,7 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
 }
 
 fn get_risk(sensor_values: &SensorValues, gas_threshold: u16, temp_threshold: f64) -> Risk {
-    println!("{:#?}",sensor_values);
+    println!("{:#?}", sensor_values);
     if sensor_values.flame {
         return Risk::High;
     }
@@ -160,36 +160,39 @@ fn get_risk(sensor_values: &SensorValues, gas_threshold: u16, temp_threshold: f6
 }
 
 #[embassy_executor::task]
-pub async fn alarms_task(red : GpioPin<12>, green: GpioPin<13>, blue : GpioPin<14>, buzzer : GpioPin<27>) {
-    let mut r = Output::new(red, Level::Low, OutputConfig::default()); 
-    let mut g = Output::new(green, Level::Low, OutputConfig::default()); 
-    let mut b = Output::new(blue, Level::Low, OutputConfig::default()); 
-    let mut piezzo_buzzer = Output::new(buzzer, Level::Low, OutputConfig::default()); 
+pub async fn alarms_task(
+    red: GpioPin<12>,
+    green: GpioPin<13>,
+    blue: GpioPin<14>,
+    buzzer: GpioPin<27>,
+) {
+    let mut r = Output::new(red, Level::Low, OutputConfig::default());
+    let mut g = Output::new(green, Level::Low, OutputConfig::default());
+    let mut b = Output::new(blue, Level::Low, OutputConfig::default());
+    let mut piezzo_buzzer = Output::new(buzzer, Level::Low, OutputConfig::default());
     loop {
         let risk = RISK_SIGNAL.wait().await;
-        
 
         match risk {
             Risk::Low => {
                 println!("Low Risk");
-                r.set_level(Level::High);
-                g.set_level(Level::Low);
-                b.set_level(Level::Low);   // Cian (Verde + Azul)
+                r.set_level(Level::Low);
+                g.set_level(Level::High);
+                b.set_level(Level::Low); // Cian (Verde + Azul)
                 piezzo_buzzer.set_level(Level::Low);
-
             }
             Risk::Moderate => {
                 println!("Moderate Risk");
-                r.set_level(Level::Low);
-                g.set_level(Level::Low);
-                b.set_level(Level::High);
+                r.set_level(Level::High);
+                g.set_level(Level::High);
+                b.set_level(Level::Low);
                 piezzo_buzzer.set_level(Level::Low);
             }
             Risk::High => {
                 println!("High Risk");
-                r.set_level(Level::Low);   // Rojo
-                g.set_level(Level::High);
-                b.set_level(Level::High);
+                r.set_level(Level::High); // Rojo
+                g.set_level(Level::Low);
+                b.set_level(Level::Low);
                 piezzo_buzzer.set_level(Level::High);
             }
         }
