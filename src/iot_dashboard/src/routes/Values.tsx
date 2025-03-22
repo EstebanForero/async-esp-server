@@ -1,5 +1,6 @@
 import { createResource, ErrorBoundary, onCleanup, resetErrorBoundaries } from "solid-js";
 import { fetchRealTimeSensorValues, SensorValues } from "../backend/backend";
+import RiskNotifier from "../components/RiskNotifier";
 
 interface Props {
   realTimeRefetchRate: number;
@@ -22,6 +23,7 @@ const Values = (props: Props) => {
 
   return (
     <ErrorBoundary fallback={<div>Error...</div>} >
+      <RiskNotifier sensorValues={realTimeData()} />
       <div class="values-container">
         <h2>Real-Time Values</h2>
         <section class="sensor-section">

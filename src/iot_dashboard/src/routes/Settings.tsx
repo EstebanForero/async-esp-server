@@ -1,5 +1,6 @@
 import { createResource, Show } from "solid-js";
 import { EspConfig, fetchConfig, updateConfig } from "../backend/backend";
+import { setConfigStore } from "../backend/configStore";
 
 const Settings = () => {
   const [configResource, { mutate, refetch }] = createResource(fetchConfig);
@@ -18,6 +19,7 @@ const Settings = () => {
     const espConfig = configResource()
     if (espConfig) {
       await updateConfig(espConfig);
+      setConfigStore(espConfig)
       refetch()
     }
   };
