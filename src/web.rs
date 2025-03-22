@@ -82,7 +82,7 @@ impl AppBuilder for Application {
                     value_history.to_string()
                 }),
             )
-            .layer(CorsLayer)
+            //.layer(CorsLayer)
     }
 }
 

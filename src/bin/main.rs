@@ -67,4 +67,10 @@ async fn main(spawner: Spawner) {
         peripherals.GPIO18,
         peripherals.GPIO23,
     ));
+    spawner.must_spawn(alarms_task(
+        peripherals.GPIO12,
+        peripherals.GPIO13,
+        peripherals.GPIO14,
+        peripherals.GPIO27
+    ));
 }
