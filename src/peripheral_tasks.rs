@@ -1,3 +1,5 @@
+use core::{array, default};
+
 use super::app::{Risk, SensorValues};
 use crate::app::{CONFIG, VALUE_HISTORY};
 use crate::gas_sensor::GasSensor;
@@ -160,7 +162,11 @@ fn get_risk(sensor_values: &SensorValues, gas_threshold: u16, temp_threshold: f6
 }
 
 #[embassy_executor::task]
-pub async fn alarms_task(red : GpioPin<12>, green: GpioPin<13>, blue : GpioPin<14>, buzzer : GpioPin<27>) {
+pub async fn alarms_task(
+    red : GpioPin<12>, 
+    green: GpioPin<13>,
+     blue : GpioPin<14>, 
+     buzzer : GpioPin<27>,) {
     let mut r = Output::new(red, Level::Low, OutputConfig::default()); 
     let mut g = Output::new(green, Level::Low, OutputConfig::default()); 
     let mut b = Output::new(blue, Level::Low, OutputConfig::default()); 
@@ -194,4 +200,34 @@ pub async fn alarms_task(red : GpioPin<12>, green: GpioPin<13>, blue : GpioPin<1
             }
         }
     }
+}
+
+
+struct Queue<const N: usize>{
+    pointer: usize,
+    array: [f64;N]
+}
+
+impl<const N: usize> Queue<N>{
+    fn new(default : f64) -> Queue<N>{
+        let array = [default;N];
+
+        return Queue{
+            pointer:0,
+            array: array
+        }
+    }   
+
+    fn push(&mut self,temp : f64)-> f64{
+        let last_temp = self.array[self.pointer];
+        self.array[self.pointer] = temp;
+        
+        if self.pointer == N {
+            self.pointer = 0
+        } else {
+            self.pointer+=1;
+        }
+        return  last_temp;
+    }
+
 }
