@@ -1,3 +1,5 @@
+export type RiskLevels = "Low" | "Moderate" | "High" | "Normal";
+
 export interface EspConfig {
   temp_threshold: number;
   gas_threshold: number;
