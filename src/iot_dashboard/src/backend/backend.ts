@@ -22,8 +22,8 @@ export interface ValueHistoryArray {
   values: SensorValues[];
 }
 
-//const BASE_URL = "http://192.168.101.14";
-const BASE_URL = `${window.location.protocol}//${window.location.host}`;
+const BASE_URL = "http://172.20.10.3";
+//const BASE_URL = `${window.location.protocol}//${window.location.host}`;
 
 export const fetchConfig = async (): Promise<EspConfig> => fetchJson<EspConfig>(`${BASE_URL}/config`);
 
