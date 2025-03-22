@@ -1,4 +1,4 @@
-import { createResource, Show } from "solid-js";
+import { createEffect, createResource, Show } from "solid-js";
 import { EspConfig, fetchConfig, updateConfig } from "../backend/backend";
 import { setConfigStore } from "../backend/configStore";
 
@@ -23,6 +23,13 @@ const Settings = () => {
       refetch()
     }
   };
+
+  createEffect(() => {
+    const espConfig = configResource()
+    if (espConfig) {
+      setConfigStore(espConfig)
+    }
+  })
 
   return (
     <div class="settings-container">

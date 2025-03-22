@@ -14,7 +14,7 @@ use esp_hal::peripherals::ADC1;
 use esp_println::println;
 
 pub static SENSOR_VALS_SIGNAL: Signal<CriticalSectionRawMutex, SensorValues> = Signal::new();
-static RISK_SIGNAL: Signal<CriticalSectionRawMutex, Risk> = Signal::new();
+pub static RISK_SIGNAL: Signal<CriticalSectionRawMutex, Risk> = Signal::new();
 
 #[embassy_executor::task]
 pub async fn test_load() {
@@ -121,6 +121,8 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
 
     let mut save_counter = 0;
 
+    let prev_temp = 0.;
+
     loop {
         let values = SENSOR_VALS_SIGNAL.wait().await;
         let config = CONFIG.lock().await.clone();
@@ -128,7 +130,12 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
         display.display_temperature(values.temp);
         display.display_gas(values.gas);
 
-        let risk = get_risk(&values, config.gas_threshold, config.temp_threshold);
+        let risk = get_risk(
+            &values,
+            config.gas_threshold,
+            config.temp_threshold,
+            prev_temp,
+        );
 
         if save_counter > config.data_point_interval {
             let mut value_history = VALUE_HISTORY.lock().await;
@@ -140,17 +147,25 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
 
         if config.alarms_enabled {
             RISK_SIGNAL.signal(risk);
+        } else {
+            RISK_SIGNAL.signal(Risk::Low);
         }
     }
 }
 
-fn get_risk(sensor_values: &SensorValues, gas_threshold: u16, temp_threshold: f64) -> Risk {
-    println!("{:#?}",sensor_values);
+fn get_risk(
+    sensor_values: &SensorValues,
+    gas_threshold: u16,
+    temp_threshold: f64,
+    prev_temp: f64,
+) -> Risk {
+    println!("{:#?}", sensor_values);
     if sensor_values.flame {
         return Risk::High;
     }
 
-    if sensor_values.gas > gas_threshold && sensor_values.temp > temp_threshold {
+    let delta_temperature = sensor_values.temp - prev_temp;
+    if sensor_values.gas > gas_threshold && delta_temperature > temp_threshold {
         return Risk::High;
     }
 
@@ -162,40 +177,34 @@ fn get_risk(sensor_values: &SensorValues, gas_threshold: u16, temp_threshold: f6
 }
 
 #[embassy_executor::task]
-pub async fn alarms_task(
-    red : GpioPin<12>, 
-    green: GpioPin<13>,
-     blue : GpioPin<14>, 
-     buzzer : GpioPin<27>,) {
+pub async fn alarms_task(red : GpioPin<12>, green: GpioPin<13>, blue : GpioPin<14>, buzzer : GpioPin<27>) {
     let mut r = Output::new(red, Level::Low, OutputConfig::default()); 
     let mut g = Output::new(green, Level::Low, OutputConfig::default()); 
     let mut b = Output::new(blue, Level::Low, OutputConfig::default()); 
     let mut piezzo_buzzer = Output::new(buzzer, Level::Low, OutputConfig::default()); 
     loop {
         let risk = RISK_SIGNAL.wait().await;
-        
 
         match risk {
             Risk::Low => {
                 println!("Low Risk");
-                r.set_level(Level::High);
-                g.set_level(Level::Low);
-                b.set_level(Level::Low);   // Cian (Verde + Azul)
+                r.set_level(Level::Low);
+                g.set_level(Level::High);
+                b.set_level(Level::Low); // Cian (Verde + Azul)
                 piezzo_buzzer.set_level(Level::Low);
-
             }
             Risk::Moderate => {
                 println!("Moderate Risk");
-                r.set_level(Level::Low);
-                g.set_level(Level::Low);
-                b.set_level(Level::High);
+                r.set_level(Level::High);
+                g.set_level(Level::High);
+                b.set_level(Level::Low);
                 piezzo_buzzer.set_level(Level::Low);
             }
             Risk::High => {
                 println!("High Risk");
-                r.set_level(Level::Low);   // Rojo
-                g.set_level(Level::High);
-                b.set_level(Level::High);
+                r.set_level(Level::High); // Rojo
+                g.set_level(Level::Low);
+                b.set_level(Level::Low);
                 piezzo_buzzer.set_level(Level::High);
             }
         }

@@ -22,7 +22,7 @@ export interface ValueHistoryArray {
   values: SensorValues[];
 }
 
-//const BASE_URL = "http://192.168.101.14";
+//const BASE_URL = "http://172.20.10.3";
 const BASE_URL = `${window.location.protocol}//${window.location.host}`;
 
 export const fetchConfig = async (): Promise<EspConfig> => fetchJson<EspConfig>(`${BASE_URL}/config`);
@@ -38,14 +38,14 @@ export const fetchSensorValues = async (): Promise<SensorValuesInfo> => {
 export const fetchRealTimeSensorValues = async (): Promise<SensorValues> => {
   const text = await fetchText(`${BASE_URL}/values/now`);
   const parsedValues = parseSensorValues(text);
-  console.log('The parsed values are: ', JSON.stringify(parsedValues))
+  //console.log('The parsed values are: ', JSON.stringify(parsedValues))
   return parsedValues
 };
 
 export const fetchSensorValuesHistory = async (): Promise<ValueHistoryArray> => {
   const text = await fetchText(`${BASE_URL}/values/history`);
   const values = text.split("|").map(parseSensorValues);
-  console.log('The values history is: ', values)
+  //console.log('The values history is: ', values)
   return { values };
 };
 

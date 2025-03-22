@@ -3,6 +3,7 @@ import { EspConfig } from "./backend";
 let configStore: EspConfig | undefined = undefined;
 
 export function setConfigStore(config: EspConfig) {
+  console.log('config store is being setted')
   configStore = config
 }
 
