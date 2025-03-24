@@ -121,7 +121,7 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
 
     let mut save_counter = 0;
 
-    let prev_temp = 0.;
+    let mut queue: Option<Queue<5>> = None;
 
     loop {
         let values = SENSOR_VALS_SIGNAL.wait().await;
@@ -129,6 +129,14 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
 
         display.display_temperature(values.temp);
         display.display_gas(values.gas);
+
+        let prev_temp = match &mut queue {
+            Some(queue) => queue.push(values.temp),
+            None => {
+                queue = Some(Queue::new(values.temp));
+                values.temp
+            }
+        };
 
         let risk = get_risk(
             &values,
@@ -159,17 +167,17 @@ fn get_risk(
     temp_threshold: f64,
     prev_temp: f64,
 ) -> Risk {
-    println!("{:#?}", sensor_values);
     if sensor_values.flame {
         return Risk::High;
     }
 
     let delta_temperature = sensor_values.temp - prev_temp;
+    println!("delta temperature: {delta_temperature}");
     if sensor_values.gas > gas_threshold && delta_temperature > temp_threshold {
         return Risk::High;
     }
 
-    if sensor_values.gas > gas_threshold || sensor_values.temp > temp_threshold {
+    if sensor_values.gas > gas_threshold || delta_temperature > temp_threshold {
         return Risk::Moderate;
     }
 
@@ -177,11 +185,16 @@ fn get_risk(
 }
 
 #[embassy_executor::task]
-pub async fn alarms_task(red : GpioPin<12>, green: GpioPin<13>, blue : GpioPin<14>, buzzer : GpioPin<27>) {
-    let mut r = Output::new(red, Level::Low, OutputConfig::default()); 
-    let mut g = Output::new(green, Level::Low, OutputConfig::default()); 
-    let mut b = Output::new(blue, Level::Low, OutputConfig::default()); 
-    let mut piezzo_buzzer = Output::new(buzzer, Level::Low, OutputConfig::default()); 
+pub async fn alarms_task(
+    red: GpioPin<12>,
+    green: GpioPin<13>,
+    blue: GpioPin<14>,
+    buzzer: GpioPin<27>,
+) {
+    let mut r = Output::new(red, Level::Low, OutputConfig::default());
+    let mut g = Output::new(green, Level::Low, OutputConfig::default());
+    let mut b = Output::new(blue, Level::Low, OutputConfig::default());
+    let mut piezzo_buzzer = Output::new(buzzer, Level::Low, OutputConfig::default());
     loop {
         let risk = RISK_SIGNAL.wait().await;
 
@@ -195,9 +208,9 @@ pub async fn alarms_task(red : GpioPin<12>, green: GpioPin<13>, blue : GpioPin<1
             }
             Risk::Moderate => {
                 println!("Moderate Risk");
-                r.set_level(Level::High);
-                g.set_level(Level::High);
-                b.set_level(Level::Low);
+                r.set_level(Level::Low);
+                g.set_level(Level::Low);
+                b.set_level(Level::High);
                 piezzo_buzzer.set_level(Level::Low);
             }
             Risk::High => {
@@ -211,32 +224,28 @@ pub async fn alarms_task(red : GpioPin<12>, green: GpioPin<13>, blue : GpioPin<1
     }
 }
 
-
-struct Queue<const N: usize>{
+struct Queue<const N: usize> {
     pointer: usize,
-    array: [f64;N]
+    array: [f64; N],
 }
 
-impl<const N: usize> Queue<N>{
-    fn new(default : f64) -> Queue<N>{
-        let array = [default;N];
+impl<const N: usize> Queue<N> {
+    fn new(default: f64) -> Queue<N> {
+        let array = [default; N];
 
-        return Queue{
-            pointer:0,
-            array: array
-        }
-    }   
-
-    fn push(&mut self,temp : f64)-> f64{
-        let last_temp = self.array[self.pointer];
-        self.array[self.pointer] = temp;
-        
-        if self.pointer == N {
-            self.pointer = 0
-        } else {
-            self.pointer+=1;
-        }
-        return  last_temp;
+        Queue { pointer: 0, array }
     }
 
+    fn push(&mut self, temp: f64) -> f64 {
+        let last_temp = self.array[self.pointer];
+        self.array[self.pointer] = temp;
+
+        if self.pointer + 1 == N {
+            self.pointer = 0
+        } else {
+            self.pointer += 1;
+        }
+
+        last_temp
+    }
 }

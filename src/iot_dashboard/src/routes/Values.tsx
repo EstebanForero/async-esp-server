@@ -23,7 +23,7 @@ const Values = (props: Props) => {
 
   return (
     <ErrorBoundary fallback={<div>Error...</div>} >
-      <RiskNotifier sensorValues={realTimeData()} />
+      <RiskNotifier risk={realTimeData()?.risk} />
       <div class="values-container">
         <h2>Real-Time Values</h2>
         <section class="sensor-section">

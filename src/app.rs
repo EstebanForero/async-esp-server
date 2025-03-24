@@ -172,7 +172,7 @@ impl<T: Default + Copy, const N: usize> History<T, N> {
 }
 
 pub static CONFIG: Mutex<CriticalSectionRawMutex, Config> = Mutex::new(Config {
-    temp_threshold: 25.,
+    temp_threshold: 5.,
     gas_threshold: 1500,
     alarms_enabled: true,
     data_point_interval: 3,

@@ -20,6 +20,7 @@ export default defineConfig({
         keep_classnames: false,
         keep_fargs: false,
         keep_fnames: false,
+        drop_debugger: true,
         toplevel: true,
         unsafe: true,
         unsafe_arrows: true,

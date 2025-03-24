@@ -70,8 +70,23 @@ impl AppBuilder for Application {
                 "/values/now",
                 get(|| async {
                     let real_time_values = SENSOR_VALS_SIGNAL.wait().await;
+                    let risk = RISK_SIGNAL.wait().await;
 
-                    real_time_values.to_string()
+                    let mut real_str: String<14> = String::new();
+                    let val_string = real_time_values.to_string();
+                    real_str.push_str(&val_string).unwrap();
+
+                    real_str.push(',').unwrap();
+
+                    real_str
+                        .push(match risk {
+                            app::Risk::Low => '0',
+                            app::Risk::Moderate => '1',
+                            app::Risk::High => '2',
+                        })
+                        .unwrap();
+
+                    real_str
                 }),
             )
             .route(
