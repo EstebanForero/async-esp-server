@@ -54,6 +54,7 @@ impl SensorValues {
     }
 }
 
+#[derive(Clone)]
 pub enum Risk {
     Low,
     Moderate,

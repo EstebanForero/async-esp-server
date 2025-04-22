@@ -41,36 +41,27 @@ async fn main(spawner: Spawner) {
 
     let stack = lib::wifi::start_wifi(esp_wifi_ctrl, peripherals.WIFI, rng, &spawner).await;
 
-    let web_app = lib::web::WebApp::default();
+    spawner.must_spawn(lib::mqtt::mqtt_task(stack));
 
-    for id in 0..lib::web::WEB_TASK_POOL_SIZE {
-        spawner.must_spawn(lib::web::web_task(
-            id,
-            stack,
-            web_app.router,
-            web_app.config,
-        ));
-    }
+    println!("Mqtt client started");
 
-    println!("Web server started");
+    spawner.must_spawn(test_load());
 
-    //spawner.must_spawn(test_load());
-
-    spawner.must_spawn(sensor_reader_task(
-        peripherals.GPIO15,
-        peripherals.ADC1,
-        peripherals.GPIO34,
-        peripherals.GPIO19,
-    ));
-    spawner.must_spawn(display_task(
-        peripherals.I2C0.into(),
-        peripherals.GPIO18,
-        peripherals.GPIO23,
-    ));
-    spawner.must_spawn(alarms_task(
-        peripherals.GPIO12,
-        peripherals.GPIO13,
-        peripherals.GPIO14,
-        peripherals.GPIO27
-    ));
+    // spawner.must_spawn(sensor_reader_task(
+    //     peripherals.GPIO15,
+    //     peripherals.ADC1,
+    //     peripherals.GPIO34,
+    //     peripherals.GPIO19,
+    // ));
+    // spawner.must_spawn(display_task(
+    //     peripherals.I2C0.into(),
+    //     peripherals.GPIO18,
+    //     peripherals.GPIO23,
+    // ));
+    // spawner.must_spawn(alarms_task(
+    //     peripherals.GPIO12,
+    //     peripherals.GPIO13,
+    //     peripherals.GPIO14,
+    //     peripherals.GPIO27,
+    // ));
 }

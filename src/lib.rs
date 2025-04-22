@@ -9,7 +9,6 @@ pub mod mqtt;
 pub mod peripheral_tasks;
 pub mod temp_sensor;
 pub mod utils;
-pub mod web;
 pub mod wifi;
 
 #[macro_export]

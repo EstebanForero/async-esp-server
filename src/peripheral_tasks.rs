@@ -33,6 +33,8 @@ pub async fn test_load() {
         Increase,
     }
 
+    let mut risk = Risk::Low;
+
     loop {
         let config = CONFIG.lock().await.clone();
 
@@ -74,7 +76,15 @@ pub async fn test_load() {
             save_counter = 0;
         }
 
-        Timer::after_millis(50).await;
+        risk = match risk {
+            Risk::Low => Risk::Moderate,
+            Risk::Moderate => Risk::High,
+            Risk::High => Risk::Low,
+        };
+
+        RISK_SIGNAL.signal(risk.clone());
+
+        Timer::after_millis(500).await;
     }
 }
 
