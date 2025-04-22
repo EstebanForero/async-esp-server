@@ -69,5 +69,6 @@ async function postJson(url: string, data: any): Promise<void> {
 
 function parseSensorValues(valuesStr: string): SensorValues {
   const [temp, gas, flame, risk] = valuesStr.split(",");
+  console.log('the risk is: ', risk === '0' ? 'Low' : risk === '1' ? 'Moderate' : 'High')
   return { temp: parseFloat(temp), gas: parseInt(gas, 10), flame: flame === "1", risk: risk === '0' ? 'Low' : risk === '1' ? 'Moderate' : 'High' };
 }
