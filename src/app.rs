@@ -38,12 +38,36 @@ impl SensorValues {
 
         string
     }
+
+    pub fn to_bytes(&self) -> [u8; 5] {
+        let temp_scaled = (self.temp * 100.0) as u16;
+        let temp_bytes = temp_scaled.to_le_bytes();
+        let gas_bytes = self.gas.to_le_bytes();
+        let flame_byte = self.flame as u8;
+        [
+            temp_bytes[0],
+            temp_bytes[1],
+            gas_bytes[0],
+            gas_bytes[1],
+            flame_byte,
+        ]
+    }
 }
 
 pub enum Risk {
     Low,
     Moderate,
     High,
+}
+
+impl Risk {
+    pub fn to_byte(&self) -> u8 {
+        match self {
+            Risk::Low => 0,
+            Risk::Moderate => 1,
+            Risk::High => 2,
+        }
+    }
 }
 
 pub const HISTORY_LENGTH: usize = 10;
@@ -120,6 +144,37 @@ pub struct Config {
     pub gas_threshold: u16,
     pub alarms_enabled: bool,
     pub data_point_interval: u8,
+}
+
+impl Config {
+    pub fn to_bytes(&self) -> [u8; 6] {
+        let temp_threshold_scaled = (self.temp_threshold * 100.0) as i16;
+        let temp_threshold_bytes = temp_threshold_scaled.to_le_bytes();
+        let gas_threshold_bytes = self.gas_threshold.to_le_bytes();
+        let alarms_enabled_byte = self.alarms_enabled as u8;
+        let data_point_interval_byte = self.data_point_interval;
+        [
+            temp_threshold_bytes[0],
+            temp_threshold_bytes[1],
+            gas_threshold_bytes[0],
+            gas_threshold_bytes[1],
+            alarms_enabled_byte,
+            data_point_interval_byte,
+        ]
+    }
+
+    pub fn from_bytes(bytes: [u8; 6]) -> Self {
+        let temp_threshold_scaled = i16::from_le_bytes([bytes[0], bytes[1]]);
+        let gas_threshold = u16::from_le_bytes([bytes[2], bytes[3]]);
+        let alarms_enabled = bytes[4] != 0;
+        let data_point_interval = bytes[5];
+        Self {
+            temp_threshold: (temp_threshold_scaled as f64) / 100.0,
+            gas_threshold,
+            alarms_enabled,
+            data_point_interval,
+        }
+    }
 }
 
 pub struct History<T: Default + Copy, const N: usize> {

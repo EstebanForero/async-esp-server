@@ -5,6 +5,7 @@ pub mod app;
 pub mod cors_layer;
 pub mod gas_sensor;
 pub mod lcd_display;
+pub mod mqtt;
 pub mod peripheral_tasks;
 pub mod temp_sensor;
 pub mod utils;
