@@ -71,7 +71,6 @@ pub async fn test_load() {
 
         if save_counter > config.data_point_interval {
             let mut value_history = VALUE_HISTORY.lock().await;
-            println!("pushing values: {:?}", sensor_values);
             value_history.push_values(sensor_values);
             save_counter = 0;
         }
@@ -84,7 +83,7 @@ pub async fn test_load() {
 
         RISK_SIGNAL.signal(risk.clone());
 
-        Timer::after_millis(500).await;
+        Timer::after_millis(1000).await;
     }
 }
 
