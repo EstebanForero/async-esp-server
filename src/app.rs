@@ -165,7 +165,7 @@ impl Config {
     }
 
     pub fn from_bytes(bytes: [u8; 6]) -> Self {
-        let temp_threshold_scaled = i16::from_le_bytes([bytes[0], bytes[1]]);
+        let temp_threshold_scaled = u16::from_le_bytes([bytes[0], bytes[1]]);
         let gas_threshold = u16::from_le_bytes([bytes[2], bytes[3]]);
         let alarms_enabled = bytes[4] != 0;
         let data_point_interval = bytes[5];
