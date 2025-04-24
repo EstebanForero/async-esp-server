@@ -45,23 +45,23 @@ async fn main(spawner: Spawner) {
 
     println!("Mqtt client started");
 
-    spawner.must_spawn(test_load());
+    // spawner.must_spawn(test_load());
 
-    // spawner.must_spawn(sensor_reader_task(
-    //     peripherals.GPIO15,
-    //     peripherals.ADC1,
-    //     peripherals.GPIO34,
-    //     peripherals.GPIO19,
-    // ));
-    // spawner.must_spawn(display_task(
-    //     peripherals.I2C0.into(),
-    //     peripherals.GPIO18,
-    //     peripherals.GPIO23,
-    // ));
-    // spawner.must_spawn(alarms_task(
-    //     peripherals.GPIO12,
-    //     peripherals.GPIO13,
-    //     peripherals.GPIO14,
-    //     peripherals.GPIO27,
-    // ));
+    spawner.must_spawn(sensor_reader_task(
+        peripherals.GPIO15,
+        peripherals.ADC1,
+        peripherals.GPIO34,
+        peripherals.GPIO19,
+    ));
+    spawner.must_spawn(display_task(
+        peripherals.I2C0.into(),
+        peripherals.GPIO18,
+        peripherals.GPIO23,
+    ));
+    spawner.must_spawn(alarms_task(
+        peripherals.GPIO12,
+        peripherals.GPIO13,
+        peripherals.GPIO14,
+        peripherals.GPIO27,
+    ));
 }
