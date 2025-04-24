@@ -27,7 +27,9 @@ pub async fn mqtt_task(stack: Stack<'static>) {
         socket.set_timeout(Some(Duration::from_secs(10)));
 
         //192.168.0.117
-        let address = Ipv4Addr::new(192, 168, 0, 117);
+        //192.168.101.12
+        //172.20.10.3
+        let address = Ipv4Addr::new(172, 20, 10, 3);
         if let Err(e) = socket.connect((address, 1883)).await {
             println!("Failed to connect to MQTT broker: {:?}", e);
             embassy_time::Timer::after(Duration::from_secs(5)).await;
