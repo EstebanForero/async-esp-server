@@ -36,7 +36,6 @@ pub async fn mqtt_task(stack: Stack<'static>) {
             continue;
         }
 
-        // Explicitly annotate the type
         let mut config: ClientConfig<'_, 5, CountingRng> =
             ClientConfig::new(rust_mqtt::client::client_config::MqttVersion::MQTTv5, rng);
 
@@ -136,12 +135,3 @@ pub async fn mqtt_task(stack: Stack<'static>) {
         embassy_time::Timer::after(Duration::from_secs(1)).await;
     }
 }
-
-// Example usage in your main function
-/*
-#[embassy_executor::main]
-async fn main(spawner: Spawner) {
-    let stack = // ... initialize your network stack here, likely using mk_static!
-    spawner.spawn(mqtt_task(stack)).ok();
-}
-*/

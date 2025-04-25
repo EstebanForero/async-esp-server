@@ -1,8 +1,7 @@
-use core::{array, usize};
+use core::array;
 
 use embassy_sync::blocking_mutex::raw::CriticalSectionRawMutex;
 use embassy_sync::mutex::Mutex;
-use esp_println::println;
 use heapless::String;
 use serde::{Deserialize, Serialize};
 use ufmt::uwrite;
@@ -149,7 +148,7 @@ pub struct Config {
 
 impl Config {
     pub fn to_bytes(&self) -> [u8; 6] {
-        let temp_threshold_scaled = (self.temp_threshold * 100.0) as i16;
+        let temp_threshold_scaled = (self.temp_threshold * 100.0) as u16;
         let temp_threshold_bytes = temp_threshold_scaled.to_le_bytes();
         let gas_threshold_bytes = self.gas_threshold.to_le_bytes();
         let alarms_enabled_byte = self.alarms_enabled as u8;
