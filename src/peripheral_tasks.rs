@@ -1,5 +1,3 @@
-use core::{array, default};
-
 use super::app::{Risk, SensorValues};
 use crate::app::{CONFIG, VALUE_HISTORY};
 use crate::gas_sensor::GasSensor;
@@ -132,6 +130,8 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
 
     let mut queue: Option<Queue<5>> = None;
 
+    let mut temp_alarm = TempAlarm::Disabled;
+
     loop {
         let values = SENSOR_VALS_SIGNAL.wait().await;
         let config = CONFIG.lock().await.clone();
@@ -151,6 +151,7 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
             &values,
             config.gas_threshold,
             config.temp_threshold,
+            &mut temp_alarm,
             prev_temp,
         );
 
@@ -170,10 +171,42 @@ pub async fn display_task(i2c: AnyI2c, scl: GpioPin<18>, sda: GpioPin<23>) {
     }
 }
 
+#[derive(Clone)]
+enum TempAlarm {
+    Disabled,
+    Enabled { temp: f64 },
+}
+
+fn is_temp_alarm(
+    temp_alarm: &mut TempAlarm,
+    temp_delta_threshold: f64,
+    current_temp: f64,
+    prev_temp: f64,
+) -> bool {
+    if let TempAlarm::Enabled { temp } = temp_alarm.clone() {
+        if current_temp >= temp - 1. {
+            return true;
+        } else {
+            *temp_alarm = TempAlarm::Disabled;
+        }
+    }
+
+    let delta_temperature = current_temp - prev_temp;
+
+    let risk_delta = delta_temperature > temp_delta_threshold;
+
+    if risk_delta {
+        *temp_alarm = TempAlarm::Enabled { temp: current_temp };
+    }
+
+    risk_delta
+}
+
 fn get_risk(
     sensor_values: &SensorValues,
     gas_threshold: u16,
-    temp_threshold: f64,
+    temp_delta_threshold: f64,
+    temp_alarm: &mut TempAlarm,
     prev_temp: f64,
 ) -> Risk {
     if sensor_values.flame {
@@ -182,11 +215,18 @@ fn get_risk(
 
     let delta_temperature = sensor_values.temp - prev_temp;
     println!("delta temperature: {delta_temperature}");
-    if sensor_values.gas > gas_threshold && delta_temperature > temp_threshold {
+    if sensor_values.gas > gas_threshold
+        && is_temp_alarm(
+            temp_alarm,
+            temp_delta_threshold,
+            sensor_values.temp,
+            prev_temp,
+        )
+    {
         return Risk::High;
     }
 
-    if sensor_values.gas > gas_threshold || delta_temperature > temp_threshold {
+    if sensor_values.gas > gas_threshold || delta_temperature > temp_delta_threshold {
         return Risk::Moderate;
     }
 
