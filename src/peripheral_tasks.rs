@@ -116,7 +116,7 @@ pub async fn sensor_reader_task(
             gas: gas_value,
             flame: flame_value,
         });
-        Timer::after_millis(100).await;
+        Timer::after_millis(200).await;
     }
 }
 
